@@ -1,0 +1,6 @@
+@AdnTestingSystem.UserService.API_HostAddress = http://localhost:5202
+
+GET {{AdnTestingSystem.UserService.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
