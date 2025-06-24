@@ -7,16 +7,12 @@ using System.Threading.Tasks;
 
 namespace AdnTestingSystem.Repositories.Models
 {
-    public class Rating : Model
+    public class ResultTimeOption : Model
     {
         public int Id { get; set; }
-        public int BookingId { get; set; }
-
-        public int Stars { get; set; }
-        public string Comment { get; set; } = "";
-        public DateTime CreatedAt { get; set; }
-
-        public Booking Booking { get; set; } = null!;
+        public ResultTimeType Type { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;     
+        public bool IsActive { get; set; } = true;
     }
-
 }

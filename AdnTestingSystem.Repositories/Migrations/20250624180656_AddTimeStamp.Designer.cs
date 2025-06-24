@@ -4,6 +4,7 @@ using AdnTestingSystem.Repositories.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AdnTestingSystem.Repositories.Migrations
 {
     [DbContext(typeof(AdnTestingDbContext))]
-    partial class AdnTestingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250624180656_AddTimeStamp")]
+    partial class AddTimeStamp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,9 +74,6 @@ namespace AdnTestingSystem.Repositories.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("AppointmentTime")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("datetime2");
 
@@ -101,17 +101,11 @@ namespace AdnTestingSystem.Repositories.Migrations
                     b.Property<int>("DnaTestServiceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ResultTimeType")
-                        .HasColumnType("int");
-
                     b.Property<int>("SampleMethod")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -272,16 +266,10 @@ namespace AdnTestingSystem.Repositories.Migrations
                     b.Property<int>("DnaTestServiceId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsCivil")
-                        .HasColumnType("bit");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ResultTimeType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SampleMethod")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")

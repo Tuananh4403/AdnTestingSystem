@@ -7,16 +7,17 @@ using System.Threading.Tasks;
 
 namespace AdnTestingSystem.Repositories.Models
 {
-    public class TestResult : Model
+    public class BookingAttachment : BaseModel
     {
         public int Id { get; set; }
         public int BookingId { get; set; }
-
-        public string Summary { get; set; } = "";
-        public string ResultFileUrl { get; set; } = "";
-        public DateTime ReleasedAt { get; set; }
+        public string FileUrl { get; set; } = "";
+        public string? Description { get; set; }
+        public DateTime UploadedAt { get; set; }
+        public int UploadedBy { get; set; }
 
         public Booking Booking { get; set; } = null!;
+        public User Staff { get; set; } = null!;
     }
 
 }
