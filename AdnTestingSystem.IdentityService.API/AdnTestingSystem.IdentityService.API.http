@@ -1,6 +1,0 @@
-@AdnTestingSystem.IdentityService.API_HostAddress = http://localhost:5148
-
-GET {{AdnTestingSystem.IdentityService.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
