@@ -1,4 +1,6 @@
+using AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementations;
 using AdnTestingSystem.Repositories.Data;
+using AdnTestingSystem.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +9,9 @@ builder.Services.AddDbContext<AdnTestingDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<BookingRepository>();
+builder.Services.AddScoped<BookingService>();
 
 var app = builder.Build();
 
