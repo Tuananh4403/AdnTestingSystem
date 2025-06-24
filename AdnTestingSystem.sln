@@ -2,11 +2,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndTestingSystem.Services", "AndTestingSystem.Services\AndTestingSystem.Services.csproj", "{A5205BE3-68DB-4649-B551-3731C742CF85}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdnTestingSystem.Api", "AdnTestingSystem.Api\AdnTestingSystem.Api.csproj", "{A7A929DF-FF1D-491D-BE68-60AF123A4E13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdnTestingSytem.Repositories", "AdnTestingSytem.Repositories\AdnTestingSytem.Repositories.csproj", "{775723D6-D535-4605-AA8C-093DDE8B0DE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdnTestingSystem.Services", "AdnTestingSystem.Services\AdnTestingSystem.Services.csproj", "{3C1254D2-A269-4ECD-A637-C9DE111C0FDE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AndTestingSystem.API", "AndTestingSystem.API\AndTestingSystem.API.csproj", "{59E3F9F1-9DF9-41A1-98A5-0057F1E6C073}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdnTestingSystem.Repositories", "AdnTestingSystem.Repositories\AdnTestingSystem.Repositories.csproj", "{B9E50873-4552-4B9B-AA5C-501F4B8BC887}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,18 +14,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A5205BE3-68DB-4649-B551-3731C742CF85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A5205BE3-68DB-4649-B551-3731C742CF85}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A5205BE3-68DB-4649-B551-3731C742CF85}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A5205BE3-68DB-4649-B551-3731C742CF85}.Release|Any CPU.Build.0 = Release|Any CPU
-		{775723D6-D535-4605-AA8C-093DDE8B0DE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{775723D6-D535-4605-AA8C-093DDE8B0DE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{775723D6-D535-4605-AA8C-093DDE8B0DE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{775723D6-D535-4605-AA8C-093DDE8B0DE2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{59E3F9F1-9DF9-41A1-98A5-0057F1E6C073}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{59E3F9F1-9DF9-41A1-98A5-0057F1E6C073}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{59E3F9F1-9DF9-41A1-98A5-0057F1E6C073}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{59E3F9F1-9DF9-41A1-98A5-0057F1E6C073}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7A929DF-FF1D-491D-BE68-60AF123A4E13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7A929DF-FF1D-491D-BE68-60AF123A4E13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7A929DF-FF1D-491D-BE68-60AF123A4E13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7A929DF-FF1D-491D-BE68-60AF123A4E13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C1254D2-A269-4ECD-A637-C9DE111C0FDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C1254D2-A269-4ECD-A637-C9DE111C0FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C1254D2-A269-4ECD-A637-C9DE111C0FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C1254D2-A269-4ECD-A637-C9DE111C0FDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9E50873-4552-4B9B-AA5C-501F4B8BC887}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9E50873-4552-4B9B-AA5C-501F4B8BC887}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9E50873-4552-4B9B-AA5C-501F4B8BC887}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9E50873-4552-4B9B-AA5C-501F4B8BC887}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

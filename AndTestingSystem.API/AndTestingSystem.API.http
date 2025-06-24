@@ -1,6 +1,0 @@
-@AndTestingSystem.API_HostAddress = http://localhost:5183
-
-GET {{AndTestingSystem.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
