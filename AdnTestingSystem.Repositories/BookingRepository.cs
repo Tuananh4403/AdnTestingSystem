@@ -6,28 +6,119 @@ using System.Threading.Tasks;
 using AdnTestingSystem.Repositories.Data;
 using AdnTestingSystem.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
-namespace AdnTestingSystem.Repositories
+
+namespace AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementations
 {
-
-
-    namespace AdnTestingSystem.Repositories.Implementations
+    public class BookingRepository
     {
-        public class BookingRepository
+        private readonly AdnTestingDbContext _context;
+
+        public BookingRepository(AdnTestingDbContext context)
         {
-            private readonly AdnTestingDbContext _context;
+            _context = context;
+        }
 
-            public BookingRepository(AdnTestingDbContext context)
+        public async Task<int> CreateBookingAsync(Booking booking)
+        {
+            _context.Bookings.Add(booking);
+            await _context.SaveChangesAsync();
+            return booking.Id;
+        }
+
+        public async Task<(List<Booking> Items, int TotalCount)> GetBookingListForStaffAsync(
+            int page,
+            int pageSize,
+            string? searchTerm,
+            BookingStatus? status)
+        {
+            var query = _context.Bookings
+                .Include(b => b.Customer)
+                    .ThenInclude(c => c.Profile)
+                .Include(b => b.DnaTestService)
+                .Include(b => b.Transaction)
+                .Include(b => b.Samples)
+                .Include(b => b.TestResult)
+                .Include(b => b.Rating)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                _context = context;
+                var search = searchTerm.Trim().ToLower();
+                query = query.Where(b =>
+                    b.Id.ToString().Contains(search) ||
+                    $"BK{b.Id:D6}".ToLower().Contains(search) ||
+                    (b.Customer.Profile != null &&
+                     (b.Customer.Profile.FullName).ToLower().Contains(search)) ||
+                    (b.Customer.Profile != null && b.Customer.Profile.FullName.ToLower().Contains(search)) ||
+                    b.Customer.Email.ToLower().Contains(search)
+                );
             }
 
-            public async Task<int> CreateBookingAsync(Booking booking)
+            if (status.HasValue)
             {
-                _context.Bookings.Add(booking);
-                await _context.SaveChangesAsync();
-                return booking.Id;
+                query = query.Where(b => b.Status == status.Value);
             }
+
+            var totalCount = await query.CountAsync();
+
+            query = query.OrderBy(b => (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Paid) ? 0 : 1)
+                        .ThenByDescending(b => b.BookingDate);
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+
+        public class CreateBookingRequest
+        {
+            public int CustomerId { get; set; }
+            public int ServiceId { get; set; }
+            public SampleMethod SampleMethod { get; set; }
+        }
+
+        public class BookingListRequest
+        {
+            public int Page { get; set; } = 1;
+            public int PageSize { get; set; } = 20;
+            public string? SearchTerm { get; set; }
+            public BookingStatus? Status { get; set; }
+        }
+
+        public class BookingListResponse
+        {
+            public List<BookingItemDto> Items { get; set; } = new();
+            public int TotalItems { get; set; }
+            public int TotalPages { get; set; }
+            public int CurrentPage { get; set; }
+            public int PageSize { get; set; }
+        }
+
+        public class BookingItemDto
+        {
+            public int Id { get; set; }
+            public string BookingId { get; set; } = string.Empty;
+            public string CustomerName { get; set; } = string.Empty;
+            public string CustomerEmail { get; set; } = string.Empty;
+            public string CustomerPhone { get; set; } = string.Empty;
+            public string ServiceName { get; set; } = string.Empty;
+            public BookingStatus Status { get; set; }
+            public string StatusDisplay { get; set; } = string.Empty;
+            public DateTime BookingDate { get; set; }
+            public SampleMethod SampleMethod { get; set; }
+            public string SampleMethodDisplay { get; set; } = string.Empty;
+            public bool IsApproved { get; set; }
+            public decimal? ServicePrice { get; set; }
+            public PaymentStatus? PaymentStatus { get; set; }
+            public string? PaymentStatusDisplay { get; set; }
+            public decimal? TransactionAmount { get; set; }
+            public DateTime? TransactionCreatedAt { get; set; }
+            public int SampleCount { get; set; }
+            public bool HasTestResult { get; set; }
+            public bool HasRating { get; set; }
+            public int? RatingStars { get; set; }
         }
     }
-
 }

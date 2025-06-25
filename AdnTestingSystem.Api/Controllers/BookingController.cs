@@ -1,7 +1,8 @@
-﻿// BookingController.cs
-using AdnTestingSystem.Repositories.Models;
+﻿using AdnTestingSystem.Repositories.Models;
 using AdnTestingSystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using static AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementations.BookingRepository;
 
 namespace AdnTestingSystem.API.Controllers
 {
@@ -22,12 +23,14 @@ namespace AdnTestingSystem.API.Controllers
             var bookingId = await _bookingService.CreateBookingAsync(request.CustomerId, request.ServiceId, request.SampleMethod);
             return Ok(new { bookingId });
         }
+
+        [HttpGet("get-list-for-staff")]
+        [Authorize(Roles = "Staff,Admin,Manager")]
+        public async Task<IActionResult> GetBookingListForStaff([FromQuery] BookingListRequest request)
+        {
+            var result = await _bookingService.GetBookingListForStaffAsync(request);
+            return Ok(result);
+        }
     }
 
-    public class CreateBookingRequest
-    {
-        public int CustomerId { get; set; }
-        public int ServiceId { get; set; }
-        public SampleMethod SampleMethod { get; set; }
-    }
 }
