@@ -12,7 +12,7 @@ namespace AdnTestingSystem.Api.Controllers
     [ApiController]
     [Route("api/bookings")]
     [Produces("application/json")]
-    [Authorize(Roles = "Customer")]
+    //[Authorize(Roles = "Customer")]
     public class BookingController : ControllerBase
     {
         private readonly IBookingService _service;
@@ -60,7 +60,7 @@ namespace AdnTestingSystem.Api.Controllers
         }
 
         [HttpGet("get-list-for-staff")]
-        [Authorize(Roles = "Staff,Admin,Manager")]
+        //[Authorize(Roles = "Staff,Admin,Manager")]
         public async Task<IActionResult> GetBookingListForStaff([FromQuery] BookingListRequest request)
         {
             var result = await _service.GetBookingListForStaffAsync(request);

@@ -8,7 +8,7 @@ using static AdnTestingSystem.Repositories.Repositories.Repository.BookingReposi
 
 namespace AdnTestingSystem.Services.Responses
 {
-    public class BookingListResponse
+    public class BookingListResponse<T>
     {
 
         public int TotalItems { get; set; }
@@ -16,7 +16,7 @@ namespace AdnTestingSystem.Services.Responses
         public int CurrentPage { get; set; }
         public int PageSize { get; set; }
 
-        public List<Booking> Items { get; set; } = new();
+        public List<T> Items { get; set; } = new();
     }
 
 }

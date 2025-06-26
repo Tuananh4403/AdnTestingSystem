@@ -114,7 +114,7 @@ namespace AdnTestingSystem.Services.Services
         }
 
 
-        public async Task<BookingListResponse> GetBookingListForStaffAsync(BookingListRequest request)
+        public async Task<BookingListResponse<BookingStaffDto>> GetBookingListForStaffAsync(BookingListRequest request)
         {
             // Fix page size
             if (request.PageSize <= 0 || request.PageSize > 100)
@@ -148,19 +148,33 @@ namespace AdnTestingSystem.Services.Services
                     );
                 }
             }
+            if (request.Status.HasValue)
+            {
+                query = query.Where(b => b.Status == request.Status.Value);
+            }
 
             int totalCount = await query.CountAsync();
 
             query = query
                 .OrderBy(b => b.ApprovedAt.HasValue)         
-                .ThenByDescending(b => b.BookingDate);       
+                .ThenByDescending(b => b.BookingDate);
 
             var items = await query
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
+                .Select(b => new BookingStaffDto
+                {
+                    Id = b.Id,
+                    CustomerName = b.Customer.Profile.FullName,
+                    CustomerEmail = b.Customer.Email,
+                    Status = b.Status,
+                    BookingDate = b.BookingDate,
+                    ServiceName = b.DnaTestService.Name,
+                    TotalPrice = b.TotalPrice
+                })
                 .ToListAsync();
 
-            return new BookingListResponse
+            return new BookingListResponse<BookingStaffDto>
             {
                 Items = items,
                 TotalItems = totalCount,
@@ -168,6 +182,7 @@ namespace AdnTestingSystem.Services.Services
                 CurrentPage = request.Page,
                 PageSize = request.PageSize
             };
+
         }
 
         public async Task<bool> ApproveBookingAsync(int bookingId, int approverUserId)
@@ -187,5 +202,6 @@ namespace AdnTestingSystem.Services.Services
             await _uow.CompleteAsync();
             return true;
         }
+
     }
 }

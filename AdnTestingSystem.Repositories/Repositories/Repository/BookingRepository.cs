@@ -40,10 +40,10 @@ namespace AdnTestingSystem.Repositories.Repositories.Repository
                 var search = searchTerm.Trim().ToLower();
                 query = query.Where(b =>
                     b.Id.ToString().Contains(search) ||
-                    b.CustomerId.ToString().Contains(search) || 
+                    b.CustomerId.ToString().Contains(search) ||
                     (b.Customer.Profile != null &&
-                     b.Customer.Profile.FullName.ToLower().Contains(search)) || 
-                    b.Customer.Email.ToLower().Contains(search) 
+                     b.Customer.Profile.FullName.ToLower().Contains(search)) ||
+                    b.Customer.Email.ToLower().Contains(search)
                 );
             }
 
@@ -65,4 +65,16 @@ namespace AdnTestingSystem.Repositories.Repositories.Repository
             return (items, totalCount);
         }
     }
+
+    public class BookingStaffDto
+    {
+        public int Id { get; set; }
+        public string CustomerName { get; set; } = null!;
+        public string CustomerEmail { get; set; } = null!;
+        public BookingStatus Status { get; set; }
+        public DateTime BookingDate { get; set; }
+        public string ServiceName { get; set; } = null!;
+        public decimal TotalPrice { get; set; }
+    }
+
 }
