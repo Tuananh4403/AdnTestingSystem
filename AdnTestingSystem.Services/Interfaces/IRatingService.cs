@@ -11,6 +11,8 @@ namespace AdnTestingSystem.Services.Interfaces
     public interface IRatingService
     {
         Task<CommonResponse<string>> CreateRatingAsync(int userId, NewRatingRequest request);
+        Task<CommonResponse<RatingViewModel>> GetRatingByBookingIdAsync(int bookingId);
+
     }
 
 }

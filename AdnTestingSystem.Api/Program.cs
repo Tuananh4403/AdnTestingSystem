@@ -75,6 +75,7 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
