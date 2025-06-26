@@ -56,5 +56,31 @@ namespace AdnTestingSystem.Api.Controllers
 
             return Ok(CommonResponse<object>.Ok(options));
         }
+
+        /// <summary>
+        /// Lấy danh sách các role đang có trên hệ thống.
+        /// </summary>
+        /// <returns>Danh sách các role: Khách hàng, Nhân viên, Quản lí, Admin</returns>
+        [HttpGet("role")]
+        public IActionResult GetRoles()
+        {
+            var options = Enum.GetValues(typeof(UserRole))
+                .Cast<UserRole>()
+                .Select(m => new
+                {
+                    Value = m,
+                    Label = m switch
+                    {
+                        UserRole.Guest => "Khách hàng",
+                        UserRole.Customer => "Người dùng",
+                        UserRole.Staff => "Nhân viên",
+                        UserRole.Manager => "Quản lí",
+                        UserRole.Admin => "Quản trị viên",
+                        _ => "Không xác định"
+                    }
+                });
+
+            return Ok(CommonResponse<object>.Ok(options));
+        }
     }
 }

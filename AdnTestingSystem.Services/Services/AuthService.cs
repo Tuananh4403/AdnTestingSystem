@@ -47,7 +47,10 @@ namespace AdnTestingSystem.Services.Services
                     FullName = request.FullName,
                     Phone = request.Phone,
                     Address = request.Address,
-                    DateOfBirth = request.DateOfBirth
+                    DateOfBirth = string.IsNullOrWhiteSpace(request.DateOfBirth)
+                    ? null
+                    : DateTime.ParseExact(request.DateOfBirth, "dd-MM-yyyy", null),
+                    Gender = request.Gender
                 }
             };
 
@@ -77,7 +80,7 @@ namespace AdnTestingSystem.Services.Services
 
         public async Task<CommonResponse<string>> LoginAsync(LoginRequest request)
         {
-            var user = await _uow.Users.GetAsync(u => u.Email == request.Email);
+            var user = await _uow.Users.GetAsync(u => u.Email == request.Email, includeProperties: "Profile");
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 return CommonResponse<string>.Fail("Email hoặc mật khẩu không đúng");
 
