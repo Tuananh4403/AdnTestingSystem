@@ -18,23 +18,17 @@ namespace AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementa
             _context = context;
         }
 
-        public async Task<int> CreateBookingAsync(Booking booking)
-        {
-            _context.Bookings.Add(booking);
-            await _context.SaveChangesAsync();
-            return booking.Id;
-        }
-
         public async Task<(List<Booking> Items, int TotalCount)> GetBookingListForStaffAsync(
-            int page,
-            int pageSize,
-            string? searchTerm,
-            BookingStatus? status)
+       int page,
+       int pageSize,
+       string? searchTerm,
+       BookingStatus? status)
         {
             var query = _context.Bookings
                 .Include(b => b.Customer)
                     .ThenInclude(c => c.Profile)
                 .Include(b => b.DnaTestService)
+                    .ThenInclude(s => s.Prices) // Thêm include Prices để lấy giá service
                 .Include(b => b.Transaction)
                 .Include(b => b.Samples)
                 .Include(b => b.TestResult)
@@ -48,8 +42,7 @@ namespace AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementa
                     b.Id.ToString().Contains(search) ||
                     $"BK{b.Id:D6}".ToLower().Contains(search) ||
                     (b.Customer.Profile != null &&
-                     (b.Customer.Profile.FullName).ToLower().Contains(search)) ||
-                    (b.Customer.Profile != null && b.Customer.Profile.FullName.ToLower().Contains(search)) ||
+                     b.Customer.Profile.FullName.ToLower().Contains(search)) ||
                     b.Customer.Email.ToLower().Contains(search)
                 );
             }
@@ -61,8 +54,11 @@ namespace AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementa
 
             var totalCount = await query.CountAsync();
 
-            query = query.OrderBy(b => (b.Status == BookingStatus.Pending || b.Status == BookingStatus.Paid) ? 0 : 1)
-                        .ThenByDescending(b => b.BookingDate);
+            // FIXED: Sort theo yêu cầu đúng
+            // 1. Chưa duyệt (Status == Pending) trước, đã duyệt sau
+            // 2. Theo ngày tạo mới nhất (BookingDate descending)
+            query = query.OrderBy(b => b.Status == BookingStatus.Pending ? 0 : 1)
+                         .ThenByDescending(b => b.BookingDate);
 
             var items = await query
                 .Skip((page - 1) * pageSize)
@@ -71,7 +67,6 @@ namespace AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementa
 
             return (items, totalCount);
         }
-
         public class CreateBookingRequest
         {
             public int CustomerId { get; set; }

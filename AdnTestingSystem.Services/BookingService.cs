@@ -18,19 +18,6 @@ namespace AdnTestingSystem.Services
             _bookingRepository = bookingRepository;
         }
 
-        public async Task<int> CreateBookingAsync(int customerId, int serviceId, SampleMethod sampleMethod)
-        {
-            var newBooking = new Booking
-            {
-                CustomerId = customerId,
-                DnaTestServiceId = serviceId,
-                SampleMethod = sampleMethod,
-                BookingDate = DateTime.UtcNow,
-                Status = BookingStatus.Pending
-            };
-            return await _bookingRepository.CreateBookingAsync(newBooking);
-        }
-
         public async Task<BookingListResponse> GetBookingListForStaffAsync(BookingListRequest request)
         {
             // Validate and set defaults
@@ -74,7 +61,7 @@ namespace AdnTestingSystem.Services
                 Id = booking.Id,
                 BookingId = $"BK{booking.Id:D6}", // Format: BK000001
                 CustomerName = booking.Customer.Profile != null
-                    ? $"{booking.Customer.Profile.FullName}".Trim()
+                    ? booking.Customer.Profile.FullName.Trim()
                     : "N/A",
                 CustomerEmail = booking.Customer.Email,
                 CustomerPhone = booking.Customer.Profile?.Phone ?? "",
@@ -84,7 +71,8 @@ namespace AdnTestingSystem.Services
                 BookingDate = booking.BookingDate,
                 SampleMethod = booking.SampleMethod,
                 SampleMethodDisplay = GetSampleMethodDisplay(booking.SampleMethod),
-                IsApproved = IsBookingApproved(booking.Status),
+                IsApproved = booking.Status != BookingStatus.Pending, // Pending = chưa duyệt, khác Pending = đã duyệt
+                ServicePrice = GetServicePrice(booking.DnaTestService),
                 PaymentStatus = booking.Transaction?.Status,
                 PaymentStatusDisplay = booking.Transaction != null ? GetPaymentStatusDisplay(booking.Transaction.Status) : null,
                 TransactionAmount = booking.Transaction?.Amount,
@@ -94,6 +82,15 @@ namespace AdnTestingSystem.Services
                 HasRating = booking.Rating != null,
                 RatingStars = booking.Rating?.Stars
             };
+        }
+
+        private decimal? GetServicePrice(DnaTestService? service)
+        {
+            if (service?.Prices == null || !service.Prices.Any())
+                return null;
+
+            // Lấy giá hiện tại (có thể là giá mới nhất hoặc theo logic business khác)
+            return service.Prices.OrderByDescending(p => p.Id).FirstOrDefault()?.Price;
         }
 
         private string GetStatusDisplay(BookingStatus status)
@@ -122,12 +119,6 @@ namespace AdnTestingSystem.Services
             };
         }
 
-        private bool IsBookingApproved(BookingStatus status)
-        {
-  
-            return status != BookingStatus.Pending && status != BookingStatus.Paid && status != BookingStatus.Cancelled;
-        }
-
         private string GetSampleMethodDisplay(SampleMethod method)
         {
             return method switch
@@ -138,6 +129,5 @@ namespace AdnTestingSystem.Services
                 _ => method.ToString()
             };
         }
-
     }
 }

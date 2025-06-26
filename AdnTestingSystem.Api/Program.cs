@@ -1,3 +1,4 @@
+using AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementations;
 using AdnTestingSystem.Repositories.Data;
 //using AdnTestingSystem.Repositories.UnitOfWork;
 using AdnTestingSystem.Services;
@@ -68,6 +69,8 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<BookingRepository>();
+builder.Services.AddScoped<BookingService>();
 //builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 //builder.Services.AddScoped<IAuthService, AuthService>();
 //builder.Services.AddScoped<IBookingService, BookingService>();
