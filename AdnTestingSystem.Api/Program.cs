@@ -76,6 +76,7 @@ builder.Services.AddScoped<IServicePriceService, ServicePriceService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IRatingService, RatingService>();
+builder.Services.AddScoped<ISampleService, SampleService>();
 
 
 var app = builder.Build();

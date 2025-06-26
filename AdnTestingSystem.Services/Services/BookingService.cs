@@ -43,7 +43,11 @@ namespace AdnTestingSystem.Services.Services
 
         public async Task<CommonResponse<string>> CreateBookingAsync(int userId, CreateBookingRequest req)
         {
-            var user = await _uow.Users.GetAsync(u => u.Id == userId);
+            var user = await _uow.Users
+                    .Query()
+                    .Include(u => u.Profile)
+                    .FirstOrDefaultAsync(u => u.Id == userId);
+
             if (user == null || user.Profile == null)
                 return CommonResponse<string>.Fail("Không tìm thấy thông tin người dùng.");
 

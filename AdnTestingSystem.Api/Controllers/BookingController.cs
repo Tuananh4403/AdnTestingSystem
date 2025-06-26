@@ -31,6 +31,7 @@ namespace AdnTestingSystem.Api.Controllers
         public async Task<IActionResult> Create([FromBody] CreateBookingRequest request)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            Console.WriteLine("userId: ", userId);
             var result = await _service.CreateBookingAsync(userId, request);
             return result.Success ? Ok(result) : BadRequest(result);
         }
