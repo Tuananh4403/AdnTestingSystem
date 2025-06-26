@@ -8,6 +8,7 @@ using System.Text;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
+using AdnTestingSystem.Services.Map;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AdnTestingDbContext>(options =>
@@ -71,8 +72,11 @@ builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IServicePriceService, ServicePriceService>();
+builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddAutoMapper(typeof(BlogMappingProfile).Assembly);
+
 
 var app = builder.Build();
 
