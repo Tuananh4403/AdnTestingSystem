@@ -17,6 +17,10 @@ namespace AdnTestingSystem.Api.Controllers
             _service = service;
         }
 
+        /// <summary>
+        /// Get all blogs
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {

@@ -1,13 +1,14 @@
 using AdnTestingSystem.Repositories.Data;
+using AdnTestingSystem.Repositories.UnitOfWork;
+using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Services;
 using Microsoft.EntityFrameworkCore;
-using AdnTestingSystem.Services.Interfaces;
-using AdnTestingSystem.Repositories.UnitOfWork;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Reflection;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Json.Serialization;
 using AdnTestingSystem.Services.Map;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -66,6 +67,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
@@ -76,6 +78,8 @@ builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(BlogMappingProfile).Assembly);
+
+builder.Services.AddScoped<IRatingService, RatingService>();
 
 
 var app = builder.Build();
