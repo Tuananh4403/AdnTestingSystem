@@ -1,16 +1,18 @@
 ﻿using AdnTestingSystem.Repositories.Models;
 using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
+using AdnTestingSystem.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static AdnTestingSystem.Repositories.Repositories.Repository.BookingRepository;
 
 namespace AdnTestingSystem.Api.Controllers
 {
     [ApiController]
     [Route("api/bookings")]
     [Produces("application/json")]
-    [Authorize(Roles = "Customer")]
+    //[Authorize(Roles = "Customer")]
     public class BookingController : ControllerBase
     {
         private readonly IBookingService _service;
@@ -56,5 +58,41 @@ namespace AdnTestingSystem.Api.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             return Ok(await _service.GetBookingHistoryAsync(userId));
         }
+
+        [HttpGet("get-list-for-staff")]
+        //[Authorize(Roles = "Staff,Admin,Manager")]
+        public async Task<IActionResult> GetBookingListForStaff([FromQuery] BookingListRequest request)
+        {
+            var result = await _service.GetBookingListForStaffAsync(request);
+            return Ok(result);
+        }
+
+        [HttpPost("approved")]
+        public async Task<IActionResult> ApproveBooking([FromBody] ApproveBookingRequest request)
+        {
+            var success = await _service.ApproveBookingAsync(request.BookingId, request.ApprovedByUserId);
+
+            if (!success)
+                return NotFound("Booking not found or already approved.");
+
+            return Ok("Booking approved successfully.");
+        }
+        /// <summary>
+        /// Cập nhật đơn đặt dịch vụ .
+        /// </summary>
+        /// <returns>Danh sách đơn đặt dịch vụ</returns>
+        [HttpPost("update-booking")]
+        [Authorize(Roles = "Staff")]
+        public async Task<IActionResult> UpdateBooking([FromBody] UpdateBookingRequest request)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var result = await _service.UpdateBookingAsync(userId, request);
+
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(result.Message);
+        }
+
     }
 }
