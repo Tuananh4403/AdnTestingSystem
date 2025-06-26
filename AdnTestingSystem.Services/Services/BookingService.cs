@@ -1,4 +1,5 @@
-﻿using AdnTestingSystem.Repositories.Models;
+﻿using AdnTestingSystem.Repositories.Data;
+using AdnTestingSystem.Repositories.Models;
 using AdnTestingSystem.Repositories.Repositories.Repository;
 using AdnTestingSystem.Repositories.UnitOfWork;
 using AdnTestingSystem.Services.Interfaces;
@@ -12,11 +13,12 @@ namespace AdnTestingSystem.Services.Services
     {
         private readonly IUnitOfWork _uow;
         private readonly IEmailSender _email;
-
-        public BookingService(IUnitOfWork uow, IEmailSender email)
+        private readonly AdnTestingDbContext _context;
+        public BookingService(IUnitOfWork uow, IEmailSender email, AdnTestingDbContext context)
         {
             _uow = uow;
             _email = email;
+            _context = context;
         }
 
         public async Task<CommonResponse<IEnumerable<DnaTestService>>> GetServicesAsync(bool isCivil)
@@ -112,6 +114,45 @@ namespace AdnTestingSystem.Services.Services
 
             return CommonResponse<string>.Ok("Thanh toán thành công.");
         }
+
+        public async Task<CommonResponse<string>> UpdateBookingAsync(int staffId, UpdateBookingRequest request)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.BookingAttachments)
+                .FirstOrDefaultAsync(b => b.Id == request.BookingId);
+
+            if (booking == null)
+            {
+                return CommonResponse<string>.Fail("Booking not found");
+            }
+
+            if (!Enum.TryParse<BookingStatus>(request.Status, true, out var status))
+            {
+                return CommonResponse<string>.Fail("Invalid status");
+            }
+
+            booking.Status = status;
+            booking.Note = request.Note;
+            booking.UpdatedAt = DateTime.UtcNow;
+            booking.UpdatedBy = staffId;
+
+            if (!string.IsNullOrEmpty(request.AttachmentImageUrl))
+            {
+                booking.BookingAttachments.Add(new BookingAttachment
+                {
+                    FileUrl = request.AttachmentImageUrl,
+                    UploadedAt = DateTime.UtcNow,
+                    UploadedBy = staffId
+                });
+
+            }
+
+            await _context.SaveChangesAsync();
+
+            return CommonResponse<string>.Ok("OK", "Booking updated successfully");
+        }
+
+    }
 
 
         public async Task<BookingListResponse<BookingStaffDto>> GetBookingListForStaffAsync(BookingListRequest request)

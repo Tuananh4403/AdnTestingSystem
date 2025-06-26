@@ -17,6 +17,7 @@ namespace AdnTestingSystem.Services.Interfaces
         Task<CommonResponse<string>> CreateBookingAsync(int userId, CreateBookingRequest request);
         Task<CommonResponse<IEnumerable<Booking>>> GetBookingHistoryAsync(int userId);
         Task<CommonResponse<string>> PayBookingAsync(int bookingId, int userId);
+        Task<CommonResponse<string>> UpdateBookingAsync(int staffId, UpdateBookingRequest request);
         Task<BookingListResponse<BookingStaffDto>> GetBookingListForStaffAsync(BookingListRequest request);
         Task<bool> ApproveBookingAsync(int bookingId, int approvedByUserId);
     }
