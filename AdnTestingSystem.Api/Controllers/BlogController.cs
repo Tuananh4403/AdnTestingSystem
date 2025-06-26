@@ -1,6 +1,7 @@
 ﻿using AdnTestingSystem.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -24,7 +25,8 @@ namespace AdnTestingSystem.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _service.GetAll());
+            var result = await _service.GetAll() ;
+            return result.Success ? Ok(result) : BadRequest(result);
         }
     }
 }
