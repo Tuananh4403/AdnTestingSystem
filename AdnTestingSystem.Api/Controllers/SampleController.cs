@@ -31,7 +31,7 @@ namespace AdnTestingSystem.Api.Controllers
         public async Task<IActionResult> GetBookingListForStaff([FromQuery] BookingListRequest request)
         {
             var result = await _service.GetAtHomeSampleBooking(request);
-            return result.Success ? Ok(result) : BadRequest(CommonResponse<string>.Fail("Lấy dữ liệu khách hàng lấy mẫu tại nahf thất bại."));
+            return result.Success ? Ok(result) : BadRequest(CommonResponse<string>.Fail("Lấy dữ liệu khách hàng lấy mẫu tại nhà thất bại."));
         }
 
 
