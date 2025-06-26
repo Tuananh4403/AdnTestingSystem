@@ -56,5 +56,22 @@ namespace AdnTestingSystem.Api.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             return Ok(await _service.GetBookingHistoryAsync(userId));
         }
+        /// <summary>
+        /// Cập nhật đơn đặt dịch vụ .
+        /// </summary>
+        /// <returns>Danh sách đơn đặt dịch vụ</returns>
+        [HttpPost("update-booking")]
+        [Authorize(Roles = "Staff")]
+        public async Task<IActionResult> UpdateBooking([FromBody] UpdateBookingRequest request)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var result = await _service.UpdateBookingAsync(userId, request);
+
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(result.Message);
+        }
+
     }
 }

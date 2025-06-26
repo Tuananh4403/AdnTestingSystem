@@ -33,6 +33,8 @@ namespace AdnTestingSystem.Repositories.Models
         public TestResult? TestResult { get; set; }
         public Rating? Rating { get; set; }
         public Transaction? Transaction { get; set; }
+        public ICollection<BookingAttachment> BookingAttachments { get; set; } = new List<BookingAttachment>();
+
     }
 
 }
