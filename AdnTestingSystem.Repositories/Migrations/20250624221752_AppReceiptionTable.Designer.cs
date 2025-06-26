@@ -4,6 +4,7 @@ using AdnTestingSystem.Repositories.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AdnTestingSystem.Repositories.Migrations
 {
     [DbContext(typeof(AdnTestingDbContext))]
-    partial class AdnTestingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250624221752_AppReceiptionTable")]
+    partial class AppReceiptionTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -100,6 +103,9 @@ namespace AdnTestingSystem.Repositories.Migrations
 
                     b.Property<int>("DnaTestServiceId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ResultTimeType")
                         .HasColumnType("int");
@@ -221,6 +227,12 @@ namespace AdnTestingSystem.Repositories.Migrations
 
                     b.Property<string>("CollectedBy")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CollectorPhone")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CollectorTitle")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")

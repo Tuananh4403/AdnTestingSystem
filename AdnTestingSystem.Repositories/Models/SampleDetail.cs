@@ -7,18 +7,20 @@ using System.Threading.Tasks;
 
 namespace AdnTestingSystem.Repositories.Models
 {
-    public class Sample : BaseModel
+    public enum BioSampleType { Blood, Saliva, Hair, Nail, UmbilicalCord }
+
+    public class SampleDetail : BaseModel
     {
         public int Id { get; set; }
-        public int BookingId { get; set; }
+        public int SampleReceiptId { get; set; }
 
-        public string SampleCode { get; set; } = "";
+        public BioSampleType Type { get; set; }
+        public int Quantity { get; set; }
         public DateTime CollectedAt { get; set; }
+        public string Condition { get; set; } = "";
         public string CollectedBy { get; set; } = "";
-        public string? CollectorPhone { get; set; } = null; 
-        public string? CollectorTitle { get; set; } = null;
 
-        public Booking Booking { get; set; } = null!;
+        public SampleReceipt SampleReceipt { get; set; } = null!;
     }
 
 }

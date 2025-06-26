@@ -13,6 +13,9 @@ namespace AdnTestingSystem.Repositories.Models
         public int Id { get; set; }
         public string Email { get; set; } = "";
         public string PasswordHash { get; set; } = "";
+        public bool IsEmailConfirmed { get; set; } = false;
+        public string? EmailVerificationCode { get; set; }
+        public DateTime? VerificationCodeExpiresAt { get; set; }
         public UserRole Role { get; set; }
 
         public string? RefreshToken { get; set; }

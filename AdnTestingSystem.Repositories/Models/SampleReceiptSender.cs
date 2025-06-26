@@ -7,17 +7,19 @@ using System.Threading.Tasks;
 
 namespace AdnTestingSystem.Repositories.Models
 {
-    public class UserProfile : Model
+    public class SampleReceiptSender : BaseModel
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
+        public int SampleReceiptId { get; set; }
 
         public string FullName { get; set; } = "";
-        public string Phone { get; set; } = "";
-        public string Address { get; set; } = "";
         public DateTime? DateOfBirth { get; set; }
+        public string CitizenId { get; set; } = "";
+        public string Address { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Relationship { get; set; } = "";
 
-        public User User { get; set; } = null!;
+        public SampleReceipt SampleReceipt { get; set; } = null!;
     }
 
 }

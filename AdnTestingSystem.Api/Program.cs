@@ -1,15 +1,14 @@
 using AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementations;
 using AdnTestingSystem.Repositories.Data;
-//using AdnTestingSystem.Repositories.UnitOfWork;
-using AdnTestingSystem.Services;
-//using AdnTestingSystem.Services.Interfaces;
-//using AdnTestingSystem.Services.Services;
+using AdnTestingSystem.Services.Services;
 using Microsoft.EntityFrameworkCore;
+using AdnTestingSystem.Services.Interfaces;
+using AdnTestingSystem.Repositories.UnitOfWork;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System.Reflection;
-using System.Security.Claims;
 using System.Text;
+using System.Reflection;
+using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AdnTestingDbContext>(options =>
@@ -69,14 +68,12 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<BookingRepository>();
-builder.Services.AddScoped<BookingService>();
-//builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
-//builder.Services.AddScoped<IAuthService, AuthService>();
-//builder.Services.AddScoped<IBookingService, BookingService>();
-//builder.Services.AddScoped<IServicePriceService, ServicePriceService>();
-//builder.Services.AddScoped<IUserManagementService, UserManagementService>();
-//builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IServicePriceService, ServicePriceService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 
