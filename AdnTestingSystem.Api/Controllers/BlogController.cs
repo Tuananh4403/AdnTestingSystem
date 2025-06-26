@@ -18,7 +18,7 @@ namespace AdnTestingSystem.Api.Controllers
         }
 
         /// <summary>
-        /// Get all blogs
+        /// Lấy danh sách blogs
         /// </summary>
         /// <returns></returns>
         [HttpGet]
