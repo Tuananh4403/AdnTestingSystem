@@ -151,10 +151,6 @@ namespace AdnTestingSystem.Services.Services
 
             return CommonResponse<string>.Ok("OK", "Booking updated successfully");
         }
-
-    }
-
-
         public async Task<BookingListResponse<BookingStaffDto>> GetBookingListForStaffAsync(BookingListRequest request)
         {
             // Fix page size
@@ -197,7 +193,7 @@ namespace AdnTestingSystem.Services.Services
             int totalCount = await query.CountAsync();
 
             query = query
-                .OrderBy(b => b.ApprovedAt.HasValue)         
+                .OrderBy(b => b.ApprovedAt.HasValue)
                 .ThenByDescending(b => b.BookingDate);
 
             var items = await query
