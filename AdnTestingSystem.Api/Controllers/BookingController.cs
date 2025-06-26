@@ -1,9 +1,11 @@
 ﻿using AdnTestingSystem.Repositories.Models;
 using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
+using AdnTestingSystem.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static AdnTestingSystem.Repositories.Repositories.Repository.BookingRepository;
 
 namespace AdnTestingSystem.Api.Controllers
 {
@@ -55,6 +57,25 @@ namespace AdnTestingSystem.Api.Controllers
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             return Ok(await _service.GetBookingHistoryAsync(userId));
+        }
+
+        [HttpGet("get-list-for-staff")]
+        [Authorize(Roles = "Staff,Admin,Manager")]
+        public async Task<IActionResult> GetBookingListForStaff([FromQuery] BookingListRequest request)
+        {
+            var result = await _service.GetBookingListForStaffAsync(request);
+            return Ok(result);
+        }
+
+        [HttpPost("approved")]
+        public async Task<IActionResult> ApproveBooking([FromBody] ApproveBookingRequest request)
+        {
+            var success = await _service.ApproveBookingAsync(request.BookingId, request.ApprovedByUserId);
+
+            if (!success)
+                return NotFound("Booking not found or already approved.");
+
+            return Ok("Booking approved successfully.");
         }
     }
 }

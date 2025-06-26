@@ -1,8 +1,10 @@
 ﻿using AdnTestingSystem.Repositories.Models;
+using AdnTestingSystem.Repositories.Repositories.Repository;
 using AdnTestingSystem.Repositories.UnitOfWork;
 using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
+using Microsoft.EntityFrameworkCore;
 
 namespace AdnTestingSystem.Services.Services
 {
@@ -110,6 +112,80 @@ namespace AdnTestingSystem.Services.Services
 
             return CommonResponse<string>.Ok("Thanh toán thành công.");
         }
-    }
 
+
+        public async Task<BookingListResponse> GetBookingListForStaffAsync(BookingListRequest request)
+        {
+            // Fix page size
+            if (request.PageSize <= 0 || request.PageSize > 100)
+                request.PageSize = 20;
+
+            if (request.Page <= 0)
+                request.Page = 1;
+
+            var query = _uow.Bookings.Query()
+                .Include(b => b.Customer).ThenInclude(c => c.Profile)
+                .Include(b => b.DnaTestService).ThenInclude(s => s.Prices)
+                .Include(b => b.Transaction)
+                .Include(b => b.Samples)
+                .Include(b => b.TestResult)
+                .Include(b => b.Rating)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                var search = request.SearchTerm.Trim().ToLower();
+
+                if (int.TryParse(search, out int bookingId))
+                {
+                    query = query.Where(b => b.Id == bookingId);
+                }
+                else
+                {
+                    query = query.Where(b =>
+                        (b.Customer.Profile != null && b.Customer.Profile.FullName.ToLower().Contains(search)) ||
+                        b.Status.ToString().ToLower().Contains(search)
+                    );
+                }
+            }
+
+            int totalCount = await query.CountAsync();
+
+            query = query
+                .OrderBy(b => b.ApprovedAt.HasValue)         
+                .ThenByDescending(b => b.BookingDate);       
+
+            var items = await query
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
+
+            return new BookingListResponse
+            {
+                Items = items,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize),
+                CurrentPage = request.Page,
+                PageSize = request.PageSize
+            };
+        }
+
+        public async Task<bool> ApproveBookingAsync(int bookingId, int approverUserId)
+        {
+            var booking = await _uow.Bookings.GetAsync(b => b.Id == bookingId);
+
+            if (booking == null || booking.ApprovedAt != null)
+                return false;
+
+            var now = DateTime.UtcNow;
+
+            booking.ApprovedBy = approverUserId;
+            booking.ApprovedAt = now;
+            booking.UpdatedAt = now;
+            booking.UpdatedBy = approverUserId;
+
+            await _uow.CompleteAsync();
+            return true;
+        }
+    }
 }

@@ -1,14 +1,14 @@
-using AdnTestingSystem.Repositories.AdnTestingSystem.Repositories.Implementations;
 using AdnTestingSystem.Repositories.Data;
+using AdnTestingSystem.Repositories.UnitOfWork;
+using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Services;
 using Microsoft.EntityFrameworkCore;
-using AdnTestingSystem.Services.Interfaces;
-using AdnTestingSystem.Repositories.UnitOfWork;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Reflection;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AdnTestingDbContext>(options =>
@@ -64,6 +64,12 @@ builder.Services.AddSwaggerGen(c =>
             new List<string>()
         }
     });
+});
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.Never;
 });
 
 builder.Services.AddControllers();
