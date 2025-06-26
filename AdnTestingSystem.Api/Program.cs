@@ -66,11 +66,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.Never;
-});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
