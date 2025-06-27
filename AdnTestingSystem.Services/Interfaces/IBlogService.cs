@@ -1,4 +1,5 @@
 ﻿using AdnTestingSystem.Repositories.Models;
+using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
 using System;
 using System.Collections.Generic;
@@ -11,5 +12,6 @@ namespace AdnTestingSystem.Services.Interfaces
     public interface IBlogService
     {
         Task<CommonResponse<IEnumerable<BlogResponse>>> GetAll();
+        Task<CommonResponse<string>> CreateBlogAsync(CreateBlogRequest request);
     }
 }

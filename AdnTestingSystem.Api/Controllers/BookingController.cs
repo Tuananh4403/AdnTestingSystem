@@ -5,7 +5,6 @@ using AdnTestingSystem.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using static AdnTestingSystem.Repositories.Repositories.Repository.BookingRepository;
 
 namespace AdnTestingSystem.Api.Controllers
 {
@@ -59,24 +58,34 @@ namespace AdnTestingSystem.Api.Controllers
             return Ok(await _service.GetBookingHistoryAsync(userId));
         }
 
+        /// <summary>
+        /// Lấy ra danh sách các đơn đặt hàng của khách hàng
+        /// </summary>
+        /// <returns>danh sách các đơn đặt hàng của khách hàng</returns>
         [HttpGet("get-list-for-staff")]
         //[Authorize(Roles = "Staff,Admin,Manager")]
         public async Task<IActionResult> GetBookingListForStaff([FromQuery] BookingListRequest request)
         {
             var result = await _service.GetBookingListForStaffAsync(request);
-            return Ok(result);
+            return Ok(result); 
         }
 
+        /// <summary>
+        /// Duyệt booking từ staff
+        /// </summary>
+        /// <param name="request">ID đơn đặt hàng và ID người dùng chấp nhận đơn hàng</param>
+        /// <returns>Duyệt đơn đặt hàng từ staff</returns>
         [HttpPost("approved")]
         public async Task<IActionResult> ApproveBooking([FromBody] ApproveBookingRequest request)
         {
-            var success = await _service.ApproveBookingAsync(request.BookingId, request.ApprovedByUserId);
+            var result = await _service.ApproveBookingAsync(request.BookingId, request.ApprovedByUserId);
 
-            if (!success)
-                return NotFound("Booking not found or already approved.");
+            if (!result.Success)
+                return BadRequest(result);
 
-            return Ok("Booking approved successfully.");
+            return Ok(result);
         }
+
         /// <summary>
         /// Cập nhật đơn đặt dịch vụ .
         /// </summary>

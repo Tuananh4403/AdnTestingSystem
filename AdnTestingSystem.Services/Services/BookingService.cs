@@ -1,7 +1,7 @@
 ﻿using AdnTestingSystem.Repositories.Data;
 using AdnTestingSystem.Repositories.Models;
-using AdnTestingSystem.Repositories.Repositories.Repository;
 using AdnTestingSystem.Repositories.UnitOfWork;
+using AdnTestingSystem.Services.Helpers;
 using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
@@ -151,9 +151,8 @@ namespace AdnTestingSystem.Services.Services
 
             return CommonResponse<string>.Ok("OK", "Booking updated successfully");
         }
-        public async Task<BookingListResponse<BookingStaffDto>> GetBookingListForStaffAsync(BookingListRequest request)
+        public async Task<CommonResponse<BookingListResponse<BookingStaffDto>>> GetBookingListForStaffAsync(BookingListRequest request)
         {
-            // Fix page size
             if (request.PageSize <= 0 || request.PageSize > 100)
                 request.PageSize = 20;
 
@@ -185,20 +184,17 @@ namespace AdnTestingSystem.Services.Services
                     );
                 }
             }
+
             if (request.Status.HasValue)
             {
                 query = query.Where(b => b.Status == request.Status.Value);
             }
 
-            int totalCount = await query.CountAsync();
-
             query = query
                 .OrderBy(b => b.ApprovedAt.HasValue)
                 .ThenByDescending(b => b.BookingDate);
 
-            var items = await query
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
+            var pagedResult = await query
                 .Select(b => new BookingStaffDto
                 {
                     Id = b.Id,
@@ -207,27 +203,34 @@ namespace AdnTestingSystem.Services.Services
                     Status = b.Status,
                     BookingDate = b.BookingDate,
                     ServiceName = b.DnaTestService.Name,
-                    TotalPrice = b.TotalPrice
+                    TotalPrice = b.TotalPrice,
+                    CustomerId = b.CustomerId, 
+                    DnaTestServiceId = b.DnaTestServiceId
                 })
-                .ToListAsync();
+                .ToPagedResultAsync(request.Page, request.PageSize);
 
-            return new BookingListResponse<BookingStaffDto>
+            var response = new BookingListResponse<BookingStaffDto>
             {
-                Items = items,
-                TotalItems = totalCount,
-                TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize),
-                CurrentPage = request.Page,
-                PageSize = request.PageSize
+                Items = pagedResult.Items,
+                TotalItems = pagedResult.TotalItems,
+                TotalPages = (int)Math.Ceiling((double)pagedResult.TotalItems / pagedResult.PageSize),
+                CurrentPage = pagedResult.Page,
+                PageSize = pagedResult.PageSize
             };
 
+            return CommonResponse<BookingListResponse<BookingStaffDto>>.Ok(response);
         }
 
-        public async Task<bool> ApproveBookingAsync(int bookingId, int approverUserId)
+
+        public async Task<CommonResponse<string>> ApproveBookingAsync(int bookingId, int approverUserId)
         {
             var booking = await _uow.Bookings.GetAsync(b => b.Id == bookingId);
 
-            if (booking == null || booking.ApprovedAt != null)
-                return false;
+            if (booking == null)
+                return CommonResponse<string>.Fail("Không tìm thấy booking.");
+
+            if (booking.ApprovedAt != null)
+                return CommonResponse<string>.Fail("Đơn hàng đã được duyệt trước đó.");
 
             var now = DateTime.UtcNow;
 
@@ -237,8 +240,8 @@ namespace AdnTestingSystem.Services.Services
             booking.UpdatedBy = approverUserId;
 
             await _uow.CompleteAsync();
-            return true;
-        }
 
+            return CommonResponse<string>.Ok("Duyệt đơn hàng thành công.");
+        }
     }
 }
