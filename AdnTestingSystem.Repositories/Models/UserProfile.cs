@@ -17,6 +17,7 @@ namespace AdnTestingSystem.Repositories.Models
         public string Address { get; set; } = "";
         public DateTime? DateOfBirth { get; set; }
         public string Gender { get; set; } = "";
+        public string Position { get; set; } = "";
         public User User { get; set; } = null!;
     }
 

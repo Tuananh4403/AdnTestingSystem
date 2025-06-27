@@ -1,8 +1,10 @@
 ﻿using AdnTestingSystem.Repositories.Models;
 using AdnTestingSystem.Repositories.UnitOfWork;
+using AdnTestingSystem.Services.Helpers;
 using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
+using Microsoft.EntityFrameworkCore;
 
 namespace AdnTestingSystem.Services.Services
 {
@@ -44,7 +46,38 @@ namespace AdnTestingSystem.Services.Services
             await _uow.Users.AddAsync(user);
             await _uow.CompleteAsync();
 
-            return CommonResponse<string>.Ok("Tạo người dùng thành công.");
+            return CommonResponse<string>.Ok(string.Empty, "Tạo tài khoản mới thành công.");
+        }
+        public async Task<CommonResponse<PagedResult<UserResponse>>> GetAllUsersAsync(int page, int pageSize)
+        {
+            var query = _uow.Users
+                .Query()
+                .Include(u => u.Profile)
+                .Where(u => u.IsEmailConfirmed);
+
+            var paged = await PaginationHelper.ToPagedResultAsync(query, page, pageSize);
+
+            var mappedUsers = paged.Items.Select(u => new UserResponse
+            {
+                Id = u.Id,
+                Email = u.Email,
+                Role = u.Role.ToString(),
+                FullName = u.Profile?.FullName,
+                Phone = u.Profile?.Phone,
+                DateOfBirth = u.Profile?.DateOfBirth?.ToString("dd-MM-yyyy"),
+                Gender = u.Profile?.Gender,
+                Position = u.Profile?.Position
+            }).ToList();
+
+            var result = new PagedResult<UserResponse>
+            {
+                Items = mappedUsers,
+                Page = paged.Page,
+                PageSize = paged.PageSize,
+                TotalItems = paged.TotalItems
+            };
+
+            return CommonResponse<PagedResult<UserResponse>>.Ok(result);
         }
     }
 }

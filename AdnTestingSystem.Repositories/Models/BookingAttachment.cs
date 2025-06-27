@@ -1,6 +1,7 @@
 ﻿using AdnTestingSystem.Repositories.Models.Common;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace AdnTestingSystem.Repositories.Models
         public int UploadedBy { get; set; }
 
         public Booking Booking { get; set; } = null!;
+        [ForeignKey("UploadedBy")]
         public User Staff { get; set; } = null!;
     }
 
