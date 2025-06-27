@@ -34,7 +34,10 @@ namespace AdnTestingSystem.Services.Services
                     FullName = request.FullName,
                     Phone = request.Phone,
                     Address = request.Address,
-                    DateOfBirth = request.DateOfBirth
+                    DateOfBirth = string.IsNullOrWhiteSpace(request.DateOfBirth)
+                    ? null
+                    : DateTime.ParseExact(request.DateOfBirth, "dd-MM-yyyy", null),
+                    Gender = request.Gender
                 }
             };
 

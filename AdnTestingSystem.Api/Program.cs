@@ -31,6 +31,16 @@ builder.Services.AddAuthentication("Bearer")
             RoleClaimType = ClaimTypes.Role
         };
     });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -92,6 +102,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors("AllowFrontend");
 
 app.MapControllers();
 
