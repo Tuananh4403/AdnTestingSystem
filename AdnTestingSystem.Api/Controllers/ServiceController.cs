@@ -21,12 +21,11 @@ namespace AdnTestingSystem.Api.Controllers
         /// <summary>
         /// Lấy danh sách dịch vụ xét nghiệm ADN theo loại (Dân sự hoặc Hành chính).
         /// </summary>
-        /// <param name="isCivil">true: Dân sự, false: Hành chính</param>
+        /// <param name="isActive">true:Mặc định là true</param>
         /// <returns>Danh sách dịch vụ xét nghiệm đang hoạt động</returns>
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetServices([FromQuery] bool isCivil)
-            => Ok(await _service.GetServicesAsync(isCivil));
+        [HttpGet("get-list-services")]
+        public async Task<IActionResult> GetPagedServices([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+         => Ok(await _service.GetServicesAsync(page, pageSize));
 
         /// <summary>
         /// Lấy giá dịch vụ theo hình thức lấy mẫu và thời gian trả kết quả.
@@ -49,7 +48,6 @@ namespace AdnTestingSystem.Api.Controllers
         /// <param name="req">Thông tin dịch vụ</param>
         /// <returns>Kết quả tạo dịch vụ</returns>
         [HttpPost]
-        [Authorize(Roles = "Manager, Admin")]
         public async Task<IActionResult> CreateService([FromBody] CreateServiceRequest req)
             => Ok(await _service.CreateServiceAsync(req));
 
@@ -60,8 +58,16 @@ namespace AdnTestingSystem.Api.Controllers
         /// <param name="req">Thông tin giá</param>
         /// <returns>Kết quả thêm giá</returns>
         [HttpPost("{id}/prices")]
-        [Authorize(Roles = "Manager, Admin")]
         public async Task<IActionResult> AddServicePrice(int id, [FromBody] AddServicePriceRequest req)
             => Ok(await _service.AddServicePriceAsync(id, req));
+
+        /// <summary>
+        /// Lấy danh sách tất cả giá dịch vụ.
+        /// </summary>
+        /// <returns>Danh sách giá dịch vụ kèm tên dịch vụ</returns>
+        [HttpGet("prices")]
+        public async Task<IActionResult> GetAllPrices()
+            => Ok(await _service.GetAllServicePricesAsync());
+
     }
 }
