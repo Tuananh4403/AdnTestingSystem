@@ -58,9 +58,8 @@ namespace AdnTestingSystem.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var query = _uow.Users.Query().Where(u => u.IsEmailConfirmed);
-            var paged = await PaginationHelper.ToPagedResultAsync(query, page, pageSize);
-            return Ok(CommonResponse<object>.Ok(paged));
+            var result = await _userService.GetAllUsersAsync(page, pageSize);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
     }
 }

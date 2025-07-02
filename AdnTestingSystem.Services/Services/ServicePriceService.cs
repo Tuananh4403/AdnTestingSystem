@@ -1,8 +1,10 @@
 ﻿using AdnTestingSystem.Repositories.Models;
 using AdnTestingSystem.Repositories.UnitOfWork;
+using AdnTestingSystem.Services.Helpers;
 using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,13 +21,6 @@ namespace AdnTestingSystem.Services.Services
         {
             _uow = uow;
         }
-
-        public async Task<CommonResponse<IEnumerable<DnaTestService>>> GetServicesAsync(bool isCivil)
-        {
-            var services = await _uow.DnaTestServices.FindAsync(s => s.IsCivil == isCivil && s.IsActive);
-            return CommonResponse<IEnumerable<DnaTestService>>.Ok(services);
-        }
-
         public async Task<CommonResponse<decimal>> GetServicePriceAsync(int serviceId, ResultTimeType resultType, SampleMethod sampleMethod)
         {
             var rule = await _uow.ServicePrices.GetAsync(p =>
@@ -40,20 +35,61 @@ namespace AdnTestingSystem.Services.Services
                 : CommonResponse<decimal>.Ok(rule.Price);
         }
 
+        public async Task<CommonResponse<PagedResult<DnaTestServiceResponse>>> GetServicesAsync(int page, int pageSize)
+        {
+            var query = _uow.DnaTestServices
+            .Query()
+            .OrderByDescending(x => x.CreatedAt);
+
+            var paged = await PaginationHelper.ToPagedResultAsync(query, page, pageSize);
+
+            var creatorIds = paged.Items.Select(x => x.CreatedBy).Distinct().ToList();
+            var creators = await _uow.Users
+            .Query()
+            .Include(u => u.Profile)
+            .Where(u => creatorIds.Contains(u.Id))
+            .ToListAsync();
+
+            var creatorDict = creators.ToDictionary(
+                u => u.Id,
+                u => u.Profile?.FullName ?? "Không rõ"
+            );
+
+
+            var mappedItems = paged.Items.Select(service => new DnaTestServiceResponse
+            {
+                Id = service.Id,
+                Name = service.Name,
+                Description = service.Description,
+                IsActive = service.IsActive,
+                CreatedAt = service.CreatedAt,
+
+            }).ToList();
+
+            var result = new PagedResult<DnaTestServiceResponse>
+            {
+                Items = mappedItems,
+                TotalItems = paged.TotalItems,
+                Page = paged.Page,
+                PageSize = paged.PageSize
+            };
+
+            return CommonResponse<PagedResult<DnaTestServiceResponse>>.Ok(result);
+        }
         public async Task<CommonResponse<string>> CreateServiceAsync(CreateServiceRequest request)
         {
             var service = new DnaTestService
             {
                 Name = request.Name,
                 Description = request.Description,
-                IsCivil = request.IsCivil,
-                IsActive = true
+                IsActive = request.IsActive,
+                CreatedAt = DateTime.UtcNow,
             };
 
             await _uow.DnaTestServices.AddAsync(service);
             await _uow.CompleteAsync();
 
-            return CommonResponse<string>.Ok("Tạo dịch vụ thành công.");
+            return CommonResponse<string>.Ok(string.Empty, "Tạo dịch vụ thành công.");
         }
 
         public async Task<CommonResponse<string>> AddServicePriceAsync(int serviceId, AddServicePriceRequest request)
@@ -74,7 +110,30 @@ namespace AdnTestingSystem.Services.Services
             await _uow.ServicePrices.AddAsync(price);
             await _uow.CompleteAsync();
 
-            return CommonResponse<string>.Ok("Thêm giá cho dịch vụ thành công.");
+            return CommonResponse<string>.Ok(string.Empty, "Thêm giá cho dịch vụ thành công.");
         }
+        public async Task<CommonResponse<List<ServicePriceResponse>>> GetAllServicePricesAsync()
+        {
+            var prices = await _uow.ServicePrices
+                .Query()
+                .Include(p => p.DnaTestService)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            var response = prices.Select(p => new ServicePriceResponse
+            {
+                Id = p.Id,
+                ServiceName = p.DnaTestService.Name,
+                ResultTimeType = p.ResultTimeType,
+                SampleMethod = p.SampleMethod,
+                IsCivil = p.IsCivil,
+                Price = p.Price,
+                AppliedFrom = p.AppliedFrom,
+                CreatedAt = p.CreatedAt
+            }).ToList();
+
+            return CommonResponse<List<ServicePriceResponse>>.Ok(response);
+        }
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AdnTestingSystem.Repositories.Models;
+using AdnTestingSystem.Services.Helpers;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
 using System;
@@ -11,9 +12,11 @@ namespace AdnTestingSystem.Services.Interfaces
 {
     public interface IServicePriceService
     {
-        Task<CommonResponse<IEnumerable<DnaTestService>>> GetServicesAsync(bool isCivil);
         Task<CommonResponse<decimal>> GetServicePriceAsync(int serviceId, ResultTimeType resultType, SampleMethod sampleMethod);
+        Task<CommonResponse<PagedResult<DnaTestServiceResponse>>> GetServicesAsync(int page, int pageSize);
         Task<CommonResponse<string>> CreateServiceAsync(CreateServiceRequest request);
         Task<CommonResponse<string>> AddServicePriceAsync(int serviceId, AddServicePriceRequest request);
+        Task<CommonResponse<List<ServicePriceResponse>>> GetAllServicePricesAsync();
+
     }
 }

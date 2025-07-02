@@ -161,9 +161,6 @@ namespace AdnTestingSystem.Repositories.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("StaffId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -180,9 +177,9 @@ namespace AdnTestingSystem.Repositories.Migrations
 
                     b.HasIndex("BookingId");
 
-                    b.HasIndex("StaffId");
+                    b.HasIndex("UploadedBy");
 
-                    b.ToTable("BookingAttachment");
+                    b.ToTable("BookingAttachments");
                 });
 
             modelBuilder.Entity("AdnTestingSystem.Repositories.Models.DnaTestService", b =>
@@ -510,6 +507,10 @@ namespace AdnTestingSystem.Repositories.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -567,8 +568,8 @@ namespace AdnTestingSystem.Repositories.Migrations
 
                     b.HasOne("AdnTestingSystem.Repositories.Models.User", "Staff")
                         .WithMany()
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("UploadedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Booking");
