@@ -247,6 +247,37 @@ namespace AdnTestingSystem.Services.Services
             await _uow.CompleteAsync();
             return true;
         }
+        public async Task<CommonResponse<string>> UpdateBookingCustomerAsync(int userId, int bookingId, UpdateBookingCustomerRequest request)
+        {
+            var booking = await _uow.Bookings.GetAsync(b => b.Id == bookingId && b.CustomerId == userId);
+            if (booking == null)
+                return CommonResponse<string>.Fail("Không tìm thấy đơn hàng cần cập nhật.");
+
+            var service = await _uow.DnaTestServices.GetByIdAsync(request.DnaTestServiceId);
+            if (service == null || !service.IsActive)
+                return CommonResponse<string>.Fail("Dịch vụ không hợp lệ.");
+
+            DateTime? appointmentTime = null;
+            if (!string.IsNullOrWhiteSpace(request.AppointmentDate))
+            {
+                if (!DateTime.TryParseExact(request.AppointmentDate, "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                    return CommonResponse<string>.Fail("Ngày thu mẫu không hợp lệ.");
+                appointmentTime = parsedDate;
+            }
+
+            booking.DnaTestServiceId = request.DnaTestServiceId;
+            booking.IsCivil = request.IsCivil;
+            booking.SampleMethod = (SampleMethod)request.SampleMethod;
+            booking.ResultTimeType = (ResultTimeType)request.ResultTimeType;
+            booking.AppointmentTime = appointmentTime;
+            booking.TotalPrice = request.TotalPrice;
+            booking.UpdatedAt = DateTime.UtcNow;
+            booking.UpdatedBy = userId;
+
+            await _uow.CompleteAsync();
+
+            return CommonResponse<string>.Ok(string.Empty,"Cập nhật đơn hàng thành công!");
+        }
 
     }
 }

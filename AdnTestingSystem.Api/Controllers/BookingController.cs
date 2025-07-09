@@ -98,5 +98,21 @@ namespace AdnTestingSystem.Api.Controllers
             return Ok(result.Message);
         }
 
+        /// <summary>
+        /// Cập nhật đơn hàng (khách hàng).
+        /// </summary>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateBookingCustomerRequest request)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr))
+                return BadRequest("Không tìm thấy ID người dùng trong token.");
+
+            var userId = int.Parse(userIdStr);
+            var result = await _service.UpdateBookingCustomerAsync(userId, id, request);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+
     }
 }
