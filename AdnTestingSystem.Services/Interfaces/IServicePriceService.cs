@@ -17,6 +17,8 @@ namespace AdnTestingSystem.Services.Interfaces
         Task<CommonResponse<string>> CreateServiceAsync(CreateServiceRequest request);
         Task<CommonResponse<string>> AddServicePriceAsync(int serviceId, AddServicePriceRequest request);
         Task<CommonResponse<List<ServicePriceResponse>>> GetAllServicePricesAsync();
+        Task<CommonResponse<decimal>> GetServicePriceAdvancedAsync(int serviceId, ResultTimeType resultTimeType, SampleMethod sampleMethod, bool isCivil);
+
 
     }
 }

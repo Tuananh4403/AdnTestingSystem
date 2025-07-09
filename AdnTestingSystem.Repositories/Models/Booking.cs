@@ -20,6 +20,7 @@ namespace AdnTestingSystem.Repositories.Models
         public DateTime BookingDate { get; set; }
         public SampleMethod SampleMethod { get; set; }
         public BookingStatus Status { get; set; }
+        public bool IsCivil { get; set; } 
 
         public ResultTimeType ResultTimeType { get; set; } 
         public decimal TotalPrice { get; set; } 

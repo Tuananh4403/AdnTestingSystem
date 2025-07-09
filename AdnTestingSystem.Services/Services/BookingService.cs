@@ -6,6 +6,7 @@ using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace AdnTestingSystem.Services.Services
 {
@@ -44,43 +45,46 @@ namespace AdnTestingSystem.Services.Services
         public async Task<CommonResponse<string>> CreateBookingAsync(int userId, CreateBookingRequest req)
         {
             var user = await _uow.Users.GetAsync(u => u.Id == userId);
-            if (user == null || user.Profile == null)
+            if (user == null)
                 return CommonResponse<string>.Fail("Không tìm thấy thông tin người dùng.");
 
             var service = await _uow.DnaTestServices.GetByIdAsync(req.DnaTestServiceId);
             if (service == null || !service.IsActive)
                 return CommonResponse<string>.Fail("Dịch vụ không hợp lệ.");
 
-            var priceRule = await _uow.ServicePrices.GetAsync(p =>
-                p.DnaTestServiceId == req.DnaTestServiceId &&
-                p.ResultTimeType == req.ResultTimeType &&
-                p.SampleMethod == req.SampleMethod &&
-                p.IsCivil == service.IsCivil &&
-                p.AppliedFrom <= DateTime.UtcNow,
-                orderBy: q => q.OrderByDescending(x => x.AppliedFrom));
+            DateTime? appointmentTime = null;
+            if (!string.IsNullOrWhiteSpace(req.AppointmentDate))
+            {
+                if (!DateTime.TryParseExact(req.AppointmentDate, "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                {
+                    return CommonResponse<string>.Fail("Ngày thu mẫu không hợp lệ. Định dạng đúng: dd-MM-yyyy");
+                }
 
-            if (priceRule == null)
-                return CommonResponse<string>.Fail("Không tìm thấy giá phù hợp.");
+                appointmentTime = parsedDate;
+            }
 
             var booking = new Booking
             {
                 CustomerId = userId,
+                CreatedBy = userId,
+                UpdatedBy = userId,
                 DnaTestServiceId = req.DnaTestServiceId,
+                SampleMethod = (SampleMethod)req.SampleMethod,
+                ResultTimeType = (ResultTimeType)req.ResultTimeType,
+                IsCivil = req.IsCivil,
                 BookingDate = DateTime.UtcNow,
-                ResultTimeType = req.ResultTimeType,
-                SampleMethod = req.SampleMethod,
-                AppointmentTime = req.SampleMethod == SampleMethod.SelfAtHome ? null : req.AppointmentTime,
+                AppointmentTime = appointmentTime,
+                TotalPrice = req.TotalPrice,
                 Status = BookingStatus.Pending,
-                TotalPrice = priceRule.Price
             };
 
             await _uow.Bookings.AddAsync(booking);
             await _uow.CompleteAsync();
 
             await _email.SendAsync(user.Email, "Đơn đặt dịch vụ xét nghiệm",
-                $"Bạn đã đặt dịch vụ xét nghiệm {service.Name}. Tổng tiền: {priceRule.Price}đ");
+                $"Bạn đã đặt dịch vụ xét nghiệm {service.Name}. Tổng tiền: {req.TotalPrice:N0}đ");
 
-            return CommonResponse<string>.Ok("Đặt dịch vụ thành công. Vui lòng thanh toán.");
+            return CommonResponse<string>.Ok(string.Empty, "Đặt dịch vụ thành công! Vui lòng kiểm tra email để biết thêm thông tin chi tiết.");
         }
 
         public async Task<CommonResponse<IEnumerable<Booking>>> GetBookingHistoryAsync(int userId)
@@ -210,7 +214,7 @@ namespace AdnTestingSystem.Services.Services
                     TotalPrice = b.TotalPrice
                 })
                 .ToListAsync();
-
+                
             return new BookingListResponse<BookingStaffDto>
             {
                 Items = items,
