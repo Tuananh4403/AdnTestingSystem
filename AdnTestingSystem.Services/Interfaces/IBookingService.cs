@@ -21,6 +21,7 @@ namespace AdnTestingSystem.Services.Interfaces
         Task<CommonResponse<PagedResult<BookingListResponse>>> GetUserBookingsAsync(int userId, BookingListRequest request);
         Task<bool> ApproveBookingAsync(int bookingId, int approvedByUserId);
         Task<CommonResponse<string>> UpdateBookingCustomerAsync(int userId, int bookingId, UpdateBookingCustomerRequest request);
+        Task<CommonResponse<string>> SoftDeleteBookingAsync(int userId, int bookingId);
 
     }
 

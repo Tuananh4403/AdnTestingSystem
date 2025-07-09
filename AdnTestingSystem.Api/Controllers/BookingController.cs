@@ -113,6 +113,24 @@ namespace AdnTestingSystem.Api.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        /// <summary>
+        /// Xóa mềm đơn đặt dịch vụ.
+        /// </summary>
+        /// <param name="id">ID đơn đặt</param>
+        /// <returns>Kết quả xóa</returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr))
+                return BadRequest("Không tìm thấy ID người dùng trong token.");
+
+            var userId = int.Parse(userIdStr);
+            var result = await _service.SoftDeleteBookingAsync(userId, id);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+
 
     }
 }

@@ -189,7 +189,7 @@ namespace AdnTestingSystem.Services.Services
 
             var query = _uow.Bookings.Query()
                 .Include(b => b.DnaTestService)
-                .Where(b => b.CustomerId == userId);
+                .Where(b => b.CustomerId == userId && b.DeletedAt == null);
 
             if (request.Status.HasValue)
                 query = query.Where(b => b.Status == request.Status);
@@ -277,6 +277,21 @@ namespace AdnTestingSystem.Services.Services
             await _uow.CompleteAsync();
 
             return CommonResponse<string>.Ok(string.Empty,"Cập nhật đơn hàng thành công!");
+        }
+        public async Task<CommonResponse<string>> SoftDeleteBookingAsync(int userId, int bookingId)
+        {
+            var booking = await _uow.Bookings.GetAsync(b => b.Id == bookingId && b.DeletedAt == null);
+            if (booking == null)
+                return CommonResponse<string>.Fail("Không tìm thấy đơn hàng!");
+
+            booking.DeletedAt = DateTime.UtcNow;
+            booking.DeletedBy = userId;
+            booking.UpdatedAt = DateTime.UtcNow;
+            booking.UpdatedBy = userId;
+
+            await _uow.CompleteAsync();
+
+            return CommonResponse<string>.Ok(string.Empty, "Xóa đơn hàng thành công!");
         }
 
     }
