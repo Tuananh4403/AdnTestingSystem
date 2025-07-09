@@ -2,11 +2,13 @@
 using AdnTestingSystem.Repositories.Models;
 using AdnTestingSystem.Repositories.Repositories.Repository;
 using AdnTestingSystem.Repositories.UnitOfWork;
+using AdnTestingSystem.Services.Helpers;
 using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Text;
 
 namespace AdnTestingSystem.Services.Services
 {
@@ -81,10 +83,35 @@ namespace AdnTestingSystem.Services.Services
             await _uow.Bookings.AddAsync(booking);
             await _uow.CompleteAsync();
 
-            await _email.SendAsync(user.Email, "Đơn đặt dịch vụ xét nghiệm",
-                $"Bạn đã đặt dịch vụ xét nghiệm {service.Name}. Tổng tiền: {req.TotalPrice:N0}đ");
+            var bookingCode = "ĐH" + booking.Id; 
 
-            return CommonResponse<string>.Ok(string.Empty, "Đặt dịch vụ thành công! Vui lòng kiểm tra email để biết thêm thông tin chi tiết.");
+            var sampleMethodLabel = Enum.GetName(typeof(SampleMethod), req.SampleMethod);
+            var resultTimeLabel = Enum.GetName(typeof(ResultTimeType), req.ResultTimeType);
+            var statusLabel = BookingStatus.Pending.ToString();
+
+            var bodyBuilder = new StringBuilder();
+            bodyBuilder.AppendLine("<p>Kính chào quý khách,</p>");
+            bodyBuilder.AppendLine("<p>Cảm ơn quý khách đã tin tưởng và đặt dịch vụ xét nghiệm tại hệ thống của chúng tôi.</p>");
+            bodyBuilder.AppendLine("<p><strong>Thông tin đơn hàng của quý khách như sau:</strong></p>");
+
+            bodyBuilder.AppendLine("<table cellpadding='5' cellspacing='0' style='border-collapse:collapse;'>");
+            bodyBuilder.AppendLine($"<tr><td><b>Mã đơn hàng:</b></td><td>{bookingCode}</td></tr>");
+            bodyBuilder.AppendLine($"<tr><td><b>Loại xét nghiệm:</b></td><td>{(booking.IsCivil ? "Dân sự" : "Hành chính")}</td></tr>");
+            bodyBuilder.AppendLine($"<tr><td><b>Loại dịch vụ:</b></td><td>{service.Name}</td></tr>");
+            bodyBuilder.AppendLine($"<tr><td><b>Phương thức lấy mẫu:</b></td><td>{EnumHelpers.GetSampleMethodLabel(booking.SampleMethod)}</td></tr>");
+            bodyBuilder.AppendLine($"<tr><td><b>Thời gian nhận kết quả:</b></td><td>{EnumHelpers.GetResultTimeLabel(booking.ResultTimeType)}</td></tr>");
+            bodyBuilder.AppendLine($"<tr><td><b>Tổng tiền:</b></td><td>{booking.TotalPrice:N0}đ</td></tr>");
+            bodyBuilder.AppendLine($"<tr><td><b>Ngày thu mẫu:</b></td><td>{booking.AppointmentTime?.ToString("dd-MM-yyyy") ?? "-"}</td></tr>");
+            bodyBuilder.AppendLine($"<tr><td><b>Ngày đặt hàng:</b></td><td>{booking.BookingDate.ToString("dd-MM-yyyy")}</td></tr>");
+            bodyBuilder.AppendLine($"<tr><td><b>Trạng thái đơn hàng:</b></td><td>{EnumHelpers.GetStatusLabel(booking.Status)}</td></tr>");
+            bodyBuilder.AppendLine("</table>");
+
+            bodyBuilder.AppendLine("<p>Vui lòng tiến hành thanh toán để chúng tôi có thể xử lý đơn hàng sớm nhất cho quý khách.</p>");
+            bodyBuilder.AppendLine("<p>Trân trọng cảm ơn quý khách!</p>");
+
+            await _email.SendAsync(user.Email, "Xác nhận đặt dịch vụ xét nghiệm", bodyBuilder.ToString());
+
+            return CommonResponse<string>.Ok(string.Empty, "Đặt dịch vụ thành công! Vui lòng kiểm tra email để biết thêm thông tin chi tiết và tiến hành thanh toán.");
         }
 
         public async Task<CommonResponse<IEnumerable<Booking>>> GetBookingHistoryAsync(int userId)
@@ -155,75 +182,52 @@ namespace AdnTestingSystem.Services.Services
 
             return CommonResponse<string>.Ok("OK", "Booking updated successfully");
         }
-        public async Task<BookingListResponse<BookingStaffDto>> GetBookingListForStaffAsync(BookingListRequest request)
+        public async Task<CommonResponse<PagedResult<BookingListResponse>>> GetUserBookingsAsync(int userId, BookingListRequest request)
         {
-            // Fix page size
-            if (request.PageSize <= 0 || request.PageSize > 100)
-                request.PageSize = 20;
-
-            if (request.Page <= 0)
-                request.Page = 1;
+            request.PageSize = request.PageSize <= 0 ? 20 : request.PageSize;
+            request.Page = request.Page <= 0 ? 1 : request.Page;
 
             var query = _uow.Bookings.Query()
-                .Include(b => b.Customer).ThenInclude(c => c.Profile)
-                .Include(b => b.DnaTestService).ThenInclude(s => s.Prices)
-                .Include(b => b.Transaction)
-                .Include(b => b.Samples)
-                .Include(b => b.TestResult)
-                .Include(b => b.Rating)
-                .AsQueryable();
+                .Include(b => b.DnaTestService)
+                .Where(b => b.CustomerId == userId);
 
-            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-            {
-                var search = request.SearchTerm.Trim().ToLower();
-
-                if (int.TryParse(search, out int bookingId))
-                {
-                    query = query.Where(b => b.Id == bookingId);
-                }
-                else
-                {
-                    query = query.Where(b =>
-                        (b.Customer.Profile != null && b.Customer.Profile.FullName.ToLower().Contains(search)) ||
-                        b.Status.ToString().ToLower().Contains(search)
-                    );
-                }
-            }
             if (request.Status.HasValue)
+                query = query.Where(b => b.Status == request.Status);
+
+            if (!string.IsNullOrEmpty(request.SortBy) && request.SortBy.Equals("status", StringComparison.OrdinalIgnoreCase))
             {
-                query = query.Where(b => b.Status == request.Status.Value);
+                query = request.SortDesc
+                    ? query.OrderByDescending(b => b.Status)
+                    : query.OrderBy(b => b.Status);
+            }
+            else
+            {
+                query = query.OrderByDescending(b => b.Status)
+                             .ThenByDescending(b => b.BookingDate);
             }
 
-            int totalCount = await query.CountAsync();
+            var paged = await PaginationHelper.ToPagedResultAsync(query, request.Page, request.PageSize);
 
-            query = query
-                .OrderBy(b => b.ApprovedAt.HasValue)
-                .ThenByDescending(b => b.BookingDate);
-
-            var items = await query
-                .Skip((request.Page - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .Select(b => new BookingStaffDto
-                {
-                    Id = b.Id,
-                    CustomerName = b.Customer.Profile.FullName,
-                    CustomerEmail = b.Customer.Email,
-                    Status = b.Status,
-                    BookingDate = b.BookingDate,
-                    ServiceName = b.DnaTestService.Name,
-                    TotalPrice = b.TotalPrice
-                })
-                .ToListAsync();
-                
-            return new BookingListResponse<BookingStaffDto>
+            var resultItems = paged.Items.Select(b => new BookingListResponse
             {
-                Items = items,
-                TotalItems = totalCount,
-                TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize),
-                CurrentPage = request.Page,
-                PageSize = request.PageSize
-            };
+                Id = b.Id,
+                ServiceName = b.DnaTestService.Name,
+                SampleMethod = (int)b.SampleMethod,
+                ResultTime = (int)b.ResultTimeType,
+                TotalPrice = b.TotalPrice,
+                SampleDate = b.AppointmentTime?.ToString("dd-MM-yyyy"),
+                BookingDate = b.BookingDate.ToString("dd-MM-yyyy"),
+                Status = (int)b.Status,
+                IsCivil = b.IsCivil
+            }).ToList();
 
+            return CommonResponse<PagedResult<BookingListResponse>>.Ok(new PagedResult<BookingListResponse>
+            {
+                Items = resultItems,
+                TotalItems = paged.TotalItems,
+                Page = paged.Page,
+                PageSize = paged.PageSize
+            });
         }
 
         public async Task<bool> ApproveBookingAsync(int bookingId, int approverUserId)

@@ -30,7 +30,11 @@ namespace AdnTestingSystem.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateBookingRequest request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr))
+                return BadRequest("User ID không tồn tại trong token");
+
+            var userId = int.Parse(userIdStr);
             var result = await _service.CreateBookingAsync(userId, request);
             return result.Success ? Ok(result) : BadRequest(result);
         }
@@ -59,11 +63,11 @@ namespace AdnTestingSystem.Api.Controllers
             return Ok(await _service.GetBookingHistoryAsync(userId));
         }
 
-        [HttpGet("get-list-for-staff")]
-        //[Authorize(Roles = "Staff,Admin,Manager")]
-        public async Task<IActionResult> GetBookingListForStaff([FromQuery] BookingListRequest request)
+        [HttpGet("get-list")]
+        public async Task<IActionResult> GetUserBookings([FromQuery] BookingListRequest request)
         {
-            var result = await _service.GetBookingListForStaffAsync(request);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.GetUserBookingsAsync(userId, request);
             return Ok(result);
         }
 
