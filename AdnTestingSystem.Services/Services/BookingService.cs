@@ -9,6 +9,10 @@ using AdnTestingSystem.Services.Responses;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text;
+using Microsoft.AspNetCore.Http;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Security.Cryptography;
 
 namespace AdnTestingSystem.Services.Services
 {
@@ -17,11 +21,13 @@ namespace AdnTestingSystem.Services.Services
         private readonly IUnitOfWork _uow;
         private readonly IEmailSender _email;
         private readonly AdnTestingDbContext _context;
-        public BookingService(IUnitOfWork uow, IEmailSender email, AdnTestingDbContext context)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public BookingService(IUnitOfWork uow, IEmailSender email, AdnTestingDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _uow = uow;
             _email = email;
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<CommonResponse<IEnumerable<DnaTestService>>> GetServicesAsync(bool isCivil)
@@ -293,6 +299,117 @@ namespace AdnTestingSystem.Services.Services
 
             return CommonResponse<string>.Ok(string.Empty, "Xóa đơn hàng thành công!");
         }
+
+        public async Task<CommonResponse<string>> GenerateVnPayPaymentUrlAsync(int bookingId, int userId)
+        {
+            var booking = await _uow.Bookings.GetAsync(b => b.Id == bookingId && b.CustomerId == userId);
+            if (booking == null)
+                return CommonResponse<string>.Fail("Không tìm thấy đơn hàng.");
+
+            if (booking.Status != BookingStatus.Pending)
+                return CommonResponse<string>.Fail("Đơn hàng không hợp lệ để thanh toán.");
+
+            const string vnp_ReturnUrl = "https://4c31d8836606.ngrok-free.app/vnpay-return";
+            const string vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+            const string vnp_TmnCode = "OYSX906U";
+            const string vnp_HashSecret = "KK73D0NBWM5F21AVVPTMC5QIETYI2DST";
+
+            var vnPay = new VnPayLibrary();
+            var currentTime = DateTime.UtcNow.AddHours(7);
+            var txnRef = booking.Id.ToString();
+            var amount = (int)(booking.TotalPrice * 100);
+            string userIp = "192.168.1.100";
+            vnPay.AddRequestData("vnp_Amount", amount.ToString());
+            vnPay.AddRequestData("vnp_Command", "pay");
+            vnPay.AddRequestData("vnp_CreateDate", currentTime.ToString("yyyyMMddHHmmss"));
+            vnPay.AddRequestData("vnp_CurrCode", "VND");
+            vnPay.AddRequestData("vnp_ExpireDate", currentTime.AddMinutes(15).ToString("yyyyMMddHHmmss"));
+            vnPay.AddRequestData("vnp_IpAddr", userIp);
+            vnPay.AddRequestData("vnp_Locale", "vn");
+            vnPay.AddRequestData("vnp_OrderInfo", $"DH{booking.Id}");
+            vnPay.AddRequestData("vnp_OrderType", "other");
+            vnPay.AddRequestData("vnp_ReturnUrl", vnp_ReturnUrl);
+            vnPay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
+            vnPay.AddRequestData("vnp_TxnRef", txnRef);
+            vnPay.AddRequestData("vnp_Version", "2.1.0");
+
+            var paymentUrl = vnPay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
+
+            return CommonResponse<string>.Ok(paymentUrl, "Tạo URL thanh toán thành công!");
+        }
+
+        public async Task MarkAsPaidAsync(int bookingId)
+        {
+            var booking = await _uow.Bookings.GetByIdAsync(bookingId);
+            if (booking != null && booking.Status == BookingStatus.Pending)
+            {
+                booking.Status = BookingStatus.Paid;
+                booking.UpdatedAt = DateTime.UtcNow;
+                await _uow.CompleteAsync();
+            }
+        }
+        public async Task<CommonResponse<string>> GenerateMoMoPaymentUrlAsync(int bookingId, int userId)
+        {
+            var booking = await _uow.Bookings.GetAsync(b => b.Id == bookingId && b.CustomerId == userId);
+            if (booking == null)
+                return CommonResponse<string>.Fail("Không tìm thấy đơn hàng.");
+
+            if (booking.Status != BookingStatus.Pending)
+                return CommonResponse<string>.Fail("Đơn hàng không hợp lệ để thanh toán.");
+
+            const string endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
+            const string partnerCode = "MOMO";
+            const string accessKey = "F8BBA842ECF85";
+            const string secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
+            const string redirectUrl = "https://yourdomain.com/momo-return";
+            const string ipnUrl = "https://yourdomain.com/momo-ipn";
+
+            string orderId = $"DH{booking.Id}_{DateTime.UtcNow.Ticks}";
+            string requestId = Guid.NewGuid().ToString();
+            string orderInfo = $"Thanh toán đơn hàng DH{booking.Id}";
+            string amount = ((int)(booking.TotalPrice)).ToString();
+            string requestType = "captureWallet";
+            string extraData = "";
+
+            string rawHash = $"accessKey={accessKey}&amount={amount}&extraData={extraData}&ipnUrl={ipnUrl}&orderId={orderId}&orderInfo={orderInfo}&partnerCode={partnerCode}&redirectUrl={redirectUrl}&requestId={requestId}&requestType={requestType}";
+            string signature = HmacSHA256(rawHash, secretKey);
+
+            var body = new
+            {
+                partnerCode,
+                accessKey,
+                requestId,
+                amount,
+                orderId,
+                orderInfo,
+                redirectUrl,
+                ipnUrl,
+                extraData,
+                requestType,
+                signature,
+                lang = "vi"
+            };
+
+            using var http = new HttpClient();
+            var response = await http.PostAsJsonAsync(endpoint, body);
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("🔍 MoMo response body:");
+            Console.WriteLine(content);
+
+            using var doc = JsonDocument.Parse(content);
+            var payUrl = doc.RootElement.GetProperty("payUrl").GetString();
+
+            return CommonResponse<string>.Ok(payUrl, "Tạo URL thanh toán MoMo thành công!");
+        }
+        private string HmacSHA256(string text, string key)
+        {
+            var keyBytes = Encoding.UTF8.GetBytes(key);
+            var inputBytes = Encoding.UTF8.GetBytes(text);
+            using var hmac = new HMACSHA256(keyBytes);
+            var hashBytes = hmac.ComputeHash(inputBytes);
+            return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+        }
+
 
     }
 }

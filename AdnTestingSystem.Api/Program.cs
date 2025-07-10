@@ -76,7 +76,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();

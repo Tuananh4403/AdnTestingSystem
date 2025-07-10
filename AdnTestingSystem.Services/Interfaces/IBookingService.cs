@@ -22,6 +22,9 @@ namespace AdnTestingSystem.Services.Interfaces
         Task<bool> ApproveBookingAsync(int bookingId, int approvedByUserId);
         Task<CommonResponse<string>> UpdateBookingCustomerAsync(int userId, int bookingId, UpdateBookingCustomerRequest request);
         Task<CommonResponse<string>> SoftDeleteBookingAsync(int userId, int bookingId);
+        Task<CommonResponse<string>> GenerateVnPayPaymentUrlAsync(int bookingId, int userId);
+        Task MarkAsPaidAsync(int bookingId);
+        Task<CommonResponse<string>> GenerateMoMoPaymentUrlAsync(int bookingId, int userId);
 
     }
 
