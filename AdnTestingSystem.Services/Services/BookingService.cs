@@ -303,113 +303,106 @@ namespace AdnTestingSystem.Services.Services
         public async Task<CommonResponse<string>> GenerateVnPayPaymentUrlAsync(int bookingId, int userId)
         {
             var booking = await _uow.Bookings.GetAsync(b => b.Id == bookingId && b.CustomerId == userId);
+            var now = DateTime.UtcNow;
+            string GenerateTransactionCode() => $"TXN-{now:yyyyMMddHHmmssfff}-{bookingId}";
+
+            var httpContext = _httpContextAccessor.HttpContext;
+            var query = httpContext?.Request.Query;
+
+            string paymentMethod = query?.ContainsKey("method") == true ? query["method"].ToString() : "UNKNOWN";
+            string transactionCode = GenerateTransactionCode();
+
             if (booking == null)
-                return CommonResponse<string>.Fail("Không tìm thấy đơn hàng.");
-
-            if (booking.Status != BookingStatus.Pending)
-                return CommonResponse<string>.Fail("Đơn hàng không hợp lệ để thanh toán.");
-
-            const string vnp_ReturnUrl = "https://4c31d8836606.ngrok-free.app/vnpay-return";
-            const string vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-            const string vnp_TmnCode = "OYSX906U";
-            const string vnp_HashSecret = "KK73D0NBWM5F21AVVPTMC5QIETYI2DST";
-
-            var vnPay = new VnPayLibrary();
-            var currentTime = DateTime.UtcNow.AddHours(7);
-            var txnRef = booking.Id.ToString();
-            var amount = (int)(booking.TotalPrice * 100);
-            string userIp = "192.168.1.100";
-            vnPay.AddRequestData("vnp_Amount", amount.ToString());
-            vnPay.AddRequestData("vnp_Command", "pay");
-            vnPay.AddRequestData("vnp_CreateDate", currentTime.ToString("yyyyMMddHHmmss"));
-            vnPay.AddRequestData("vnp_CurrCode", "VND");
-            vnPay.AddRequestData("vnp_ExpireDate", currentTime.AddMinutes(15).ToString("yyyyMMddHHmmss"));
-            vnPay.AddRequestData("vnp_IpAddr", userIp);
-            vnPay.AddRequestData("vnp_Locale", "vn");
-            vnPay.AddRequestData("vnp_OrderInfo", $"DH{booking.Id}");
-            vnPay.AddRequestData("vnp_OrderType", "other");
-            vnPay.AddRequestData("vnp_ReturnUrl", vnp_ReturnUrl);
-            vnPay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
-            vnPay.AddRequestData("vnp_TxnRef", txnRef);
-            vnPay.AddRequestData("vnp_Version", "2.1.0");
-
-            var paymentUrl = vnPay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
-
-            return CommonResponse<string>.Ok(paymentUrl, "Tạo URL thanh toán thành công!");
-        }
-
-        public async Task MarkAsPaidAsync(int bookingId)
-        {
-            var booking = await _uow.Bookings.GetByIdAsync(bookingId);
-            if (booking != null && booking.Status == BookingStatus.Pending)
             {
-                booking.Status = BookingStatus.Paid;
-                booking.UpdatedAt = DateTime.UtcNow;
+                await _uow.Transactions.AddAsync(new Transaction
+                {
+                    BookingId = bookingId,
+                    CreatedBy = userId,
+                    Amount = 0,
+                    PaymentMethod = paymentMethod,
+                    TransactionCode = transactionCode,
+                    Status = PaymentStatus.Failed,
+                    Message = "Thanh toán thất bại: Không tìm thấy đơn hàng.",
+                    CreatedAt = now
+                });
                 await _uow.CompleteAsync();
+                return CommonResponse<string>.Fail("Thanh toán thất bại! Vui lòng kiểm tra Lịch sử giao dịch để biết thêm thông tin chi tiết.");
             }
-        }
-        public async Task<CommonResponse<string>> GenerateMoMoPaymentUrlAsync(int bookingId, int userId)
-        {
-            var booking = await _uow.Bookings.GetAsync(b => b.Id == bookingId && b.CustomerId == userId);
-            if (booking == null)
-                return CommonResponse<string>.Fail("Không tìm thấy đơn hàng.");
 
             if (booking.Status != BookingStatus.Pending)
-                return CommonResponse<string>.Fail("Đơn hàng không hợp lệ để thanh toán.");
-
-            const string endpoint = "https://test-payment.momo.vn/v2/gateway/api/create";
-            const string partnerCode = "MOMO";
-            const string accessKey = "F8BBA842ECF85";
-            const string secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
-            const string redirectUrl = "https://yourdomain.com/momo-return";
-            const string ipnUrl = "https://yourdomain.com/momo-ipn";
-
-            string orderId = $"DH{booking.Id}_{DateTime.UtcNow.Ticks}";
-            string requestId = Guid.NewGuid().ToString();
-            string orderInfo = $"Thanh toán đơn hàng DH{booking.Id}";
-            string amount = ((int)(booking.TotalPrice)).ToString();
-            string requestType = "captureWallet";
-            string extraData = "";
-
-            string rawHash = $"accessKey={accessKey}&amount={amount}&extraData={extraData}&ipnUrl={ipnUrl}&orderId={orderId}&orderInfo={orderInfo}&partnerCode={partnerCode}&redirectUrl={redirectUrl}&requestId={requestId}&requestType={requestType}";
-            string signature = HmacSHA256(rawHash, secretKey);
-
-            var body = new
             {
-                partnerCode,
-                accessKey,
-                requestId,
-                amount,
-                orderId,
-                orderInfo,
-                redirectUrl,
-                ipnUrl,
-                extraData,
-                requestType,
-                signature,
-                lang = "vi"
-            };
+                await _uow.Transactions.AddAsync(new Transaction
+                {
+                    BookingId = bookingId,
+                    CreatedBy = userId,
+                    Amount = 0,
+                    PaymentMethod = paymentMethod,
+                    TransactionCode = transactionCode,
+                    Status = PaymentStatus.Failed,
+                    Message = "Thanh toán thất bại: Đơn hàng không ở trạng thái chờ thanh toán.",
+                    CreatedAt = now
+                });
+                await _uow.CompleteAsync();
+                return CommonResponse<string>.Fail("Thanh toán thất bại! Vui lòng kiểm tra Lịch sử giao dịch để biết thêm thông tin chi tiết.");
+            }
 
-            using var http = new HttpClient();
-            var response = await http.PostAsJsonAsync(endpoint, body);
-            var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("🔍 MoMo response body:");
-            Console.WriteLine(content);
+            if (query == null || !query.ContainsKey("amount") || !int.TryParse(query["amount"], out var userAmount))
+            {
+                await _uow.Transactions.AddAsync(new Transaction
+                {
+                    BookingId = bookingId,
+                    CreatedBy = userId,
+                    Amount = 0,
+                    PaymentMethod = paymentMethod,
+                    TransactionCode = transactionCode,
+                    Status = PaymentStatus.Failed,
+                    Message = "Thanh toán thất bại: Số tiền thanh toán không hợp lệ.",
+                    CreatedAt = now
+                });
+                await _uow.CompleteAsync();
+                return CommonResponse<string>.Fail("Thanh toán thất bại! Vui lòng kiểm tra Lịch sử giao dịch để biết thêm thông tin chi tiết.");
+            }
 
-            using var doc = JsonDocument.Parse(content);
-            var payUrl = doc.RootElement.GetProperty("payUrl").GetString();
+            if (userAmount != booking.TotalPrice)
+            {
+                string reason = userAmount < booking.TotalPrice
+                    ? "Số tiền thanh toán nhỏ hơn tổng tiền dịch vụ."
+                    : "Số tiền thanh toán lớn hơn tổng tiền dịch vụ.";
 
-            return CommonResponse<string>.Ok(payUrl, "Tạo URL thanh toán MoMo thành công!");
+                await _uow.Transactions.AddAsync(new Transaction
+                {
+                    BookingId = bookingId,
+                    CreatedBy = userId,
+                    Amount = userAmount,
+                    PaymentMethod = paymentMethod,
+                    TransactionCode = transactionCode,
+                    Status = PaymentStatus.Failed,
+                    Message = $"Thanh toán thất bại: {reason}",
+                    CreatedAt = now
+                });
+                await _uow.CompleteAsync();
+                return CommonResponse<string>.Fail("Thanh toán thất bại! Vui lòng kiểm tra Lịch sử giao dịch để biết thêm thông tin chi tiết.");
+            }
+
+            booking.Status = BookingStatus.Paid;
+            booking.UpdatedAt = now;
+            booking.UpdatedBy = userId;
+            _uow.Bookings.Update(booking);
+
+            await _uow.Transactions.AddAsync(new Transaction
+            {
+                BookingId = bookingId,
+                CreatedBy = userId,
+                Amount = userAmount,
+                PaymentMethod = paymentMethod,
+                TransactionCode = transactionCode,
+                Status = PaymentStatus.Paid,
+                Message = $"Thanh toán đơn hàng ĐH{bookingId} thành công.",
+                CreatedAt = now
+            });
+
+            await _uow.CompleteAsync();
+            return CommonResponse<string>.Ok(string.Empty, "Thanh toán thành công! Vui lòng kiểm tra Lịch sử giao dịch để biết thêm thông tin chi tiết.");
         }
-        private string HmacSHA256(string text, string key)
-        {
-            var keyBytes = Encoding.UTF8.GetBytes(key);
-            var inputBytes = Encoding.UTF8.GetBytes(text);
-            using var hmac = new HMACSHA256(keyBytes);
-            var hashBytes = hmac.ComputeHash(inputBytes);
-            return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
-        }
-
-
     }
 }

@@ -138,13 +138,5 @@ namespace AdnTestingSystem.Api.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [HttpGet("{id}/create-momo-url")]
-        public async Task<IActionResult> CreateMoMoPaymentUrl(int id)
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var result = await _service.GenerateMoMoPaymentUrlAsync(id, userId);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
-
     }
 }

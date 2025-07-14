@@ -18,6 +18,8 @@ namespace AdnTestingSystem.Repositories.Models
         public PaymentStatus Status { get; set; }
 
         public decimal Amount { get; set; }
+        public int CreatedBy { get; set; } 
+        public string? Message { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public Booking Booking { get; set; } = null!;
