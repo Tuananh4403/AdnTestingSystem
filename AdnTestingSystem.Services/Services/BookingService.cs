@@ -88,7 +88,7 @@ namespace AdnTestingSystem.Services.Services
             await _uow.Bookings.AddAsync(booking);
             await _uow.CompleteAsync();
 
-            var bookingCode = "ĐH" + booking.Id; 
+            var bookingCode = "ĐH" + booking.Id;
 
             var sampleMethodLabel = Enum.GetName(typeof(SampleMethod), req.SampleMethod);
             var resultTimeLabel = Enum.GetName(typeof(ResultTimeType), req.ResultTimeType);
@@ -254,7 +254,7 @@ namespace AdnTestingSystem.Services.Services
             booking.UpdatedBy = approverUserId;
 
             await _uow.CompleteAsync();
-            return true;
+            return CommonResponse<string>.Ok("OK", "Booking approved successfully");
         }
         public async Task<CommonResponse<string>> UpdateBookingCustomerAsync(int userId, int bookingId, UpdateBookingCustomerRequest request)
         {
@@ -285,7 +285,7 @@ namespace AdnTestingSystem.Services.Services
 
             await _uow.CompleteAsync();
 
-            return CommonResponse<string>.Ok(string.Empty,"Cập nhật đơn hàng thành công!");
+            return CommonResponse<string>.Ok(string.Empty, "Cập nhật đơn hàng thành công!");
         }
         public async Task<CommonResponse<string>> SoftDeleteBookingAsync(int userId, int bookingId)
         {

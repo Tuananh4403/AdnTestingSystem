@@ -63,15 +63,9 @@ namespace AdnTestingSystem.Api.Controllers
         }
 
         /// <summary>
-        /// Lấy ra danh sách các đơn đặt hàng của khách hàng
+        /// Lấy danh sách các đơn đã đặt của người dùng.
         /// </summary>
-        /// <returns>danh sách các đơn đặt hàng của khách hàng</returns>
-        [HttpGet("get-list-for-staff")]
-        //[Authorize(Roles = "Staff,Admin,Manager")]
-        public async Task<IActionResult> GetBookingListForStaff([FromQuery] BookingListRequest request)
-        {
-            var result = await _service.GetBookingListForStaffAsync(request);
-            return Ok(result); 
+        /// <returns>Danh sách đơn đặt dịch vụ</returns>
         [HttpGet("get-list")]
         public async Task<IActionResult> GetUserBookings([FromQuery] BookingListRequest request)
         {
