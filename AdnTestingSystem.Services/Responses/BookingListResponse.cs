@@ -7,15 +7,19 @@ using System.Threading.Tasks;
 
 namespace AdnTestingSystem.Services.Responses
 {
-    public class BookingListResponse<T>
+    public class BookingListResponse
     {
 
-        public int TotalItems { get; set; }
-        public int TotalPages { get; set; }
-        public int CurrentPage { get; set; }
-        public int PageSize { get; set; }
-
-        public List<T> Items { get; set; } = new();
+        public int Id { get; set; }
+        public string Code => $"ĐH{Id}";
+        public string ServiceName { get; set; } = string.Empty;
+        public int SampleMethod { get; set; }
+        public int ResultTime { get; set; }
+        public decimal TotalPrice { get; set; }
+        public string? SampleDate { get; set; }
+        public string BookingDate { get; set; } = string.Empty;
+        public int Status { get; set; }
+        public bool IsCivil { get; set; }
     }
 
     public class BookingStaffDto

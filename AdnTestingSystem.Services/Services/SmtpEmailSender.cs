@@ -33,7 +33,7 @@ namespace AdnTestingSystem.Services.Services
                 From = new MailAddress(_config["Email:From"]),
                 Subject = subject,
                 Body = body,
-                IsBodyHtml = false
+                IsBodyHtml = true
             };
             mailMessage.To.Add(toEmail);
 

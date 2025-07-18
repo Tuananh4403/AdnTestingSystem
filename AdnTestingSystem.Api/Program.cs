@@ -77,7 +77,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
@@ -90,6 +90,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(typeof(BlogMappingProfile).Assembly);
 
 builder.Services.AddScoped<IRatingService, RatingService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 
 var app = builder.Build();

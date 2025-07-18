@@ -39,6 +39,7 @@ namespace AdnTestingSystem.Services.Services
         {
             var query = _uow.DnaTestServices
             .Query()
+            .Where(x => x.IsActive)
             .OrderByDescending(x => x.CreatedAt);
 
             var paged = await PaginationHelper.ToPagedResultAsync(query, page, pageSize);
@@ -134,6 +135,20 @@ namespace AdnTestingSystem.Services.Services
 
             return CommonResponse<List<ServicePriceResponse>>.Ok(response);
         }
+        public async Task<CommonResponse<decimal>> GetServicePriceAdvancedAsync(int serviceId, ResultTimeType resultTimeType, SampleMethod sampleMethod, bool isCivil)
+        {
+            var price = await _uow.ServicePrices.GetAsync(
+                p => p.DnaTestServiceId == serviceId &&
+                     p.ResultTimeType == resultTimeType &&
+                     p.SampleMethod == sampleMethod &&
+                     p.IsCivil == isCivil &&
+                     p.AppliedFrom <= DateTime.UtcNow,
+                orderBy: q => q.OrderByDescending(x => x.AppliedFrom)
+            );
 
+            return price == null
+                ? CommonResponse<decimal>.Ok(0, "Vui lòng liên hệ với chúng tôi để biết thêm thông tin thanh toán!")
+                : CommonResponse<decimal>.Ok(price.Price);
+        }
     }
 }

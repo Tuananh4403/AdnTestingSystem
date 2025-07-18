@@ -69,5 +69,24 @@ namespace AdnTestingSystem.Api.Controllers
         public async Task<IActionResult> GetAllPrices()
             => Ok(await _service.GetAllServicePricesAsync());
 
+        /// <summary>
+        /// Lấy giá dịch vụ theo loại xét nghiệm, phương thức lấy mẫu và thời gian trả kết quả.
+        /// </summary>
+        /// <param name="id">ID dịch vụ</param>
+        /// <param name="resultTimeType">Thời gian trả kết quả</param>
+        /// <param name="sampleMethod">Phương thức lấy mẫu</param>
+        /// <param name="isCivil">Loại xét nghiệm (Dân sự / Hành chính)</param>
+        /// <returns>Giá tiền phù hợp nếu có</returns>
+        [HttpGet("{id}/advanced-price")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAdvancedPrice(
+            int id,
+            [FromQuery] ResultTimeType resultTimeType,
+            [FromQuery] SampleMethod sampleMethod,
+            [FromQuery] bool isCivil)
+        {
+            return Ok(await _service.GetServicePriceAdvancedAsync(id, resultTimeType, sampleMethod, isCivil));
+        }
+
     }
 }

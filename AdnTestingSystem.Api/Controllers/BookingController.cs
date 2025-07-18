@@ -29,7 +29,11 @@ namespace AdnTestingSystem.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateBookingRequest request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr))
+                return BadRequest("User ID không tồn tại trong token");
+
+            var userId = int.Parse(userIdStr);
             var result = await _service.CreateBookingAsync(userId, request);
             return result.Success ? Ok(result) : BadRequest(result);
         }
@@ -68,6 +72,12 @@ namespace AdnTestingSystem.Api.Controllers
         {
             var result = await _service.GetBookingListForStaffAsync(request);
             return Ok(result); 
+        [HttpGet("get-list")]
+        public async Task<IActionResult> GetUserBookings([FromQuery] BookingListRequest request)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.GetUserBookingsAsync(userId, request);
+            return Ok(result);
         }
 
         /// <summary>
@@ -101,6 +111,46 @@ namespace AdnTestingSystem.Api.Controllers
                 return BadRequest(result.Message);
 
             return Ok(result.Message);
+        }
+
+        /// <summary>
+        /// Cập nhật đơn hàng (khách hàng).
+        /// </summary>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateBookingCustomerRequest request)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr))
+                return BadRequest("Không tìm thấy ID người dùng trong token.");
+
+            var userId = int.Parse(userIdStr);
+            var result = await _service.UpdateBookingCustomerAsync(userId, id, request);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        /// <summary>
+        /// Xóa mềm đơn đặt dịch vụ.
+        /// </summary>
+        /// <param name="id">ID đơn đặt</param>
+        /// <returns>Kết quả xóa</returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr))
+                return BadRequest("Không tìm thấy ID người dùng trong token.");
+
+            var userId = int.Parse(userIdStr);
+            var result = await _service.SoftDeleteBookingAsync(userId, id);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpGet("{id}/create-payment-url")]
+        public async Task<IActionResult> CreatePaymentUrl(int id)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _service.GenerateVnPayPaymentUrlAsync(id, userId);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
     }
