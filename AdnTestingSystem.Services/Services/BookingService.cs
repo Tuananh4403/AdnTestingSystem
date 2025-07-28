@@ -215,6 +215,7 @@ namespace AdnTestingSystem.Services.Services
             .Include(b => b.DnaTestService)
             .Include(b => b.Transaction)
             .Include(b => b.Customer).ThenInclude(u => u.Profile)
+            .Include(b => b.SampleCollector).ThenInclude(u => u.Profile)
             .Where(b => b.DeletedAt == null);
 
             if (!request.IsAll)
@@ -224,6 +225,11 @@ namespace AdnTestingSystem.Services.Services
 
             if (request.Status.HasValue)
                 query = query.Where(b => b.Status == request.Status);
+
+            if (request.IsAll && request.IsAppointment)
+            {
+                query = query.Where(b => (int)b.Status >= 2);
+            }
 
             if (!string.IsNullOrEmpty(request.SortBy) && request.SortBy.Equals("status", StringComparison.OrdinalIgnoreCase))
             {
@@ -254,7 +260,9 @@ namespace AdnTestingSystem.Services.Services
 
                 CustomerFullName = b.Customer.Profile?.FullName ?? "N/A",
                 ApprovedAt = b.ApprovedAt?.ToString("dd-MM-yyyy HH:mm") ?? null,
-                StatusTransaction = b.Transaction != null ? (int)b.Transaction.Status : -1
+                StatusTransaction = b.Transaction != null ? (int)b.Transaction.Status : -1,
+                AppointmentTime = b.AppointmentTime?.ToString("dd-MM-yyyy HH:mm"),
+                SampleCollector = b.SampleCollector?.Profile?.FullName
             }).ToList();
 
             return CommonResponse<PagedResult<BookingListResponse>>.Ok(new PagedResult<BookingListResponse>

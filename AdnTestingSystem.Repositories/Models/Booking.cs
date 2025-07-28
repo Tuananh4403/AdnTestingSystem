@@ -28,6 +28,8 @@ namespace AdnTestingSystem.Repositories.Models
         public int? ApprovedBy { get; set; }
         public DateTime? ApprovedAt { get; set; }
         public string? Note { get; set; }
+        public int? SampleCollectorId { get; set; } 
+        public User? SampleCollector { get; set; }
         public User Customer { get; set; } = null!;
         public DnaTestService DnaTestService { get; set; } = null!;
         public ICollection<Sample> Samples { get; set; } = new List<Sample>();

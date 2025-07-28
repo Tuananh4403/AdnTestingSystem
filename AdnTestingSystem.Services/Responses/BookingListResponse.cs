@@ -25,6 +25,8 @@ namespace AdnTestingSystem.Services.Responses
         public string? ApprovedAt { get; set; }
         public string Note { get; set; }
         public int StatusTransaction { get; set; }
+        public string? AppointmentTime { get; set; } 
+        public string? SampleCollector { get; set; }
     }
 
 }
