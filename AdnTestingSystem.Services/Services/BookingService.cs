@@ -155,6 +155,7 @@ namespace AdnTestingSystem.Services.Services
         public async Task<CommonResponse<string>> UpdateBookingAsync(int staffId, UpdateBookingRequest request)
         {
             var booking = await _context.Bookings
+                .Include(b => b.Customer)
                 .Include(b => b.BookingAttachments)
                 .FirstOrDefaultAsync(b => b.Id == request.BookingId);
 
@@ -186,6 +187,22 @@ namespace AdnTestingSystem.Services.Services
             }
 
             await _context.SaveChangesAsync();
+
+            if (!string.IsNullOrWhiteSpace(booking.Customer?.Email))
+            {
+                var bookingCode = "ĐH" + booking.Id;
+
+                var emailBody = new StringBuilder();
+                emailBody.AppendLine("<p>Kính chào quý khách,</p>");
+                emailBody.AppendLine($"<p>MATAP xin thông báo đơn hàng của bạn với mã <strong>{bookingCode}</strong> đã được cập nhật.</p>");
+                emailBody.AppendLine("<p>Vui lòng kiểm tra đơn hàng của bạn trên phần mềm!</p>");
+                emailBody.AppendLine("<p>Trân trọng,<br/>Admin</p>");
+                await _email.SendAsync(
+                    booking.Customer.Email,
+                    "Cập nhật thông tin đơn hàng",
+                    emailBody.ToString()
+                );
+            }
 
             return CommonResponse<string>.Ok("OK", "Cập nhật đơn hàng thành công!");
         }
