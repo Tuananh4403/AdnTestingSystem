@@ -241,6 +241,11 @@ namespace AdnTestingSystem.Services.Services
                 query = query.Where(b => b.CustomerId == userId);
             }
 
+            if (request.IsAll && request.BookingId.HasValue)
+            {
+                query = query.Where(b => b.Id == request.BookingId.Value);
+            }
+
             if (request.Status.HasValue)
                 query = query.Where(b => b.Status == request.Status);
 
@@ -280,7 +285,13 @@ namespace AdnTestingSystem.Services.Services
                 ApprovedAt = b.ApprovedAt?.ToString("dd-MM-yyyy HH:mm") ?? null,
                 StatusTransaction = b.Transaction != null ? (int)b.Transaction.Status : -1,
                 AppointmentTime = b.AppointmentTime?.ToString("dd-MM-yyyy HH:mm"),
-                SampleCollector = b.SampleCollector?.Profile?.FullName
+                SampleCollector = b.SampleCollector?.Profile?.FullName,
+
+                CustomerEmail = b.Customer?.Email,
+                CustomerPhone = b.Customer?.Profile?.Phone,
+                CustomerAddress = b.Customer?.Profile?.Address,
+                CustomerGender = b.Customer?.Profile?.Gender,
+                CustomerDob = b.Customer?.Profile?.DateOfBirth?.ToString("dd-MM-yyyy")
             }).ToList();
 
             return CommonResponse<PagedResult<BookingListResponse>>.Ok(new PagedResult<BookingListResponse>

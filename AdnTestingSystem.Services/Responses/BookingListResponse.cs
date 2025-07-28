@@ -27,6 +27,11 @@ namespace AdnTestingSystem.Services.Responses
         public int StatusTransaction { get; set; }
         public string? AppointmentTime { get; set; } 
         public string? SampleCollector { get; set; }
+        public string? CustomerEmail { get; set; }
+        public string? CustomerPhone { get; set; }
+        public string? CustomerAddress { get; set; }
+        public string? CustomerGender { get; set; }
+        public string? CustomerDob { get; set; }
     }
 
 }

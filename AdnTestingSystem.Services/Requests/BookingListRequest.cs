@@ -16,6 +16,7 @@ namespace AdnTestingSystem.Services.Requests
         public bool SortDesc { get; set; } = true;
         public bool IsAll { get; set; } = false;
         public bool IsAppointment { get; set; } = false;
+        public int? BookingId { get; set; }
 
     }
 }
