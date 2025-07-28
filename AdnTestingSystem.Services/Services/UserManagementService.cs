@@ -79,5 +79,30 @@ namespace AdnTestingSystem.Services.Services
 
             return CommonResponse<PagedResult<UserResponse>>.Ok(result);
         }
+
+        public async Task<CommonResponse<List<UserSimpleResponse>>> GetStaffListAsync(string? search)
+        {
+            var query = _uow.Users
+                .Query()
+                .Include(u => u.Profile)
+                .Where(u => u.Role == UserRole.Staff && u.IsEmailConfirmed);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var lowerSearch = search.ToLower();
+                query = query.Where(u => u.Profile != null && u.Profile.FullName.ToLower().Contains(lowerSearch));
+            }
+
+            var staffList = await query
+                .Select(u => new UserSimpleResponse
+                {
+                    Id = u.Id,
+                    FullName = u.Profile!.FullName
+                })
+                .ToListAsync();
+
+            return CommonResponse<List<UserSimpleResponse>>.Ok(staffList);
+        }
+
     }
 }

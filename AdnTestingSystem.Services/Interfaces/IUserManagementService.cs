@@ -13,5 +13,7 @@ namespace AdnTestingSystem.Services.Interfaces
     {
         Task<CommonResponse<string>> CreateUserAsync(CreateUserRequest request);
         Task<CommonResponse<PagedResult<UserResponse>>> GetAllUsersAsync(int page, int pageSize);
+        Task<CommonResponse<List<UserSimpleResponse>>> GetStaffListAsync(string? search);
+
     }
 }

@@ -164,15 +164,21 @@ namespace AdnTestingSystem.Services.Services
                 return CommonResponse<string>.Fail("Booking not found");
             }
 
-            if (!Enum.IsDefined(typeof(BookingStatus), request.Status))
+            if (request.Status.HasValue)
             {
-                return CommonResponse<string>.Fail("Invalid status");
+                if (!Enum.IsDefined(typeof(BookingStatus), request.Status.Value))
+                {
+                    return CommonResponse<string>.Fail("Invalid status");
+                }
+
+                booking.Status = (BookingStatus)request.Status.Value;
             }
 
-            var status = (BookingStatus)request.Status;
+            if (!string.IsNullOrWhiteSpace(request.Note))
+            {
+                booking.Note = request.Note;
+            }
 
-            booking.Status = status;
-            booking.Note = request.Note;
             booking.UpdatedAt = DateTime.UtcNow;
             booking.UpdatedBy = staffId;
 
@@ -185,6 +191,18 @@ namespace AdnTestingSystem.Services.Services
                     UploadedBy = staffId
                 });
             }
+
+            if (request.SampleCollectorId.HasValue)
+            {
+                var collectorExists = await _context.Users.AnyAsync(u => u.Id == request.SampleCollectorId.Value);
+                if (!collectorExists)
+                {
+                    return CommonResponse<string>.Fail("Người thu mẫu không tồn tại");
+                }
+
+                booking.SampleCollectorId = request.SampleCollectorId.Value;
+            }
+
 
             await _context.SaveChangesAsync();
 
