@@ -61,5 +61,17 @@ namespace AdnTestingSystem.Api.Controllers
             var result = await _userService.GetAllUsersAsync(page, pageSize);
             return result.Success ? Ok(result) : BadRequest(result);
         }
+
+        /// <summary>
+        /// Lấy danh sách nhân viên (Staff) theo tên (nếu có).
+        /// </summary>
+        [HttpGet("staffs")]
+        [Authorize(Roles = "Admin,Manager,Staff")]
+        public async Task<IActionResult> GetStaffList([FromQuery] string? search)
+        {
+            var result = await _userService.GetStaffListAsync(search);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
     }
 }
