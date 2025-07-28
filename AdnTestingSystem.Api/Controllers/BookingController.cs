@@ -86,7 +86,7 @@ namespace AdnTestingSystem.Api.Controllers
         /// </summary>
         /// <returns>Danh sách đơn đặt dịch vụ</returns>
         [HttpPost("update-booking")]
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> UpdateBooking([FromBody] UpdateBookingRequest request)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");

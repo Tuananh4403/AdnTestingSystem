@@ -9,7 +9,7 @@ using System.Transactions;
 namespace AdnTestingSystem.Repositories.Models
 {
     public enum SampleMethod { SelfAtHome, StaffAtHome, AtClinic }
-    public enum BookingStatus { Pending, Paid, KitSent, SampleCollected, InLab, Completed, Cancelled }
+    public enum BookingStatus { Pending, Paid, Approved, KitSent, SampleCollected, InLab, Completed, Cancelled }
 
     public class Booking : BaseModel
     {

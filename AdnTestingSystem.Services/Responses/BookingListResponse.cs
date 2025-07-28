@@ -21,6 +21,10 @@ namespace AdnTestingSystem.Services.Responses
         public string BookingDate { get; set; } = string.Empty;
         public int Status { get; set; }
         public bool IsCivil { get; set; }
+        public string CustomerFullName { get; set; } = string.Empty;
+        public string? ApprovedAt { get; set; }
+        public string Note { get; set; }
+        public int StatusTransaction { get; set; }
     }
 
 }

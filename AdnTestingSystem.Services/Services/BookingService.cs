@@ -163,10 +163,12 @@ namespace AdnTestingSystem.Services.Services
                 return CommonResponse<string>.Fail("Booking not found");
             }
 
-            if (!Enum.TryParse<BookingStatus>(request.Status, true, out var status))
+            if (!Enum.IsDefined(typeof(BookingStatus), request.Status))
             {
                 return CommonResponse<string>.Fail("Invalid status");
             }
+
+            var status = (BookingStatus)request.Status;
 
             booking.Status = status;
             booking.Note = request.Note;
@@ -181,12 +183,11 @@ namespace AdnTestingSystem.Services.Services
                     UploadedAt = DateTime.UtcNow,
                     UploadedBy = staffId
                 });
-
             }
 
             await _context.SaveChangesAsync();
 
-            return CommonResponse<string>.Ok("OK", "Booking updated successfully");
+            return CommonResponse<string>.Ok("OK", "Cập nhật đơn hàng thành công!");
         }
         public async Task<CommonResponse<PagedResult<BookingListResponse>>> GetUserBookingsAsync(int userId, BookingListRequest request)
         {
@@ -194,8 +195,15 @@ namespace AdnTestingSystem.Services.Services
             request.Page = request.Page <= 0 ? 1 : request.Page;
 
             var query = _uow.Bookings.Query()
-                .Include(b => b.DnaTestService)
-                .Where(b => b.CustomerId == userId && b.DeletedAt == null);
+            .Include(b => b.DnaTestService)
+            .Include(b => b.Transaction)
+            .Include(b => b.Customer).ThenInclude(u => u.Profile)
+            .Where(b => b.DeletedAt == null);
+
+            if (!request.IsAll)
+            {
+                query = query.Where(b => b.CustomerId == userId);
+            }
 
             if (request.Status.HasValue)
                 query = query.Where(b => b.Status == request.Status);
@@ -224,7 +232,12 @@ namespace AdnTestingSystem.Services.Services
                 SampleDate = b.AppointmentTime?.ToString("dd-MM-yyyy"),
                 BookingDate = b.BookingDate.ToString("dd-MM-yyyy"),
                 Status = (int)b.Status,
-                IsCivil = b.IsCivil
+                IsCivil = b.IsCivil,
+                Note = b.Note,
+
+                CustomerFullName = b.Customer.Profile?.FullName ?? "N/A",
+                ApprovedAt = b.ApprovedAt?.ToString("dd-MM-yyyy HH:mm") ?? null,
+                StatusTransaction = b.Transaction != null ? (int)b.Transaction.Status : -1
             }).ToList();
 
             return CommonResponse<PagedResult<BookingListResponse>>.Ok(new PagedResult<BookingListResponse>

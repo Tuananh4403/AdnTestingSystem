@@ -14,5 +14,6 @@ namespace AdnTestingSystem.Services.Requests
         public BookingStatus? Status { get; set; }
         public string? SortBy { get; set; } = "date";
         public bool SortDesc { get; set; } = true;
+        public bool IsAll { get; set; } = false;
     }
 }
