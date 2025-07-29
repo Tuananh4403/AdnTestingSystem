@@ -68,6 +68,14 @@ namespace AdnTestingSystem.Services.Services
             _context.SampleReceipts.Add(sampleReceipt);
             await _context.SaveChangesAsync();
             await SendSampleReceiptNotificationEmailAsync(request.CustomerFullName);
+            var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == request.BookingId);
+            if (booking != null)
+            {
+                booking.IsSampleReceiptCreated = true;
+                booking.UpdatedAt = DateTime.UtcNow;
+                booking.UpdatedBy = currentUserId;
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<CommonResponse<PagedResult<SampleReceiptListResponse>>> GetSampleReceiptsAsync(SampleReceiptListRequest request)

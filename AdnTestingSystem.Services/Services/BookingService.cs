@@ -247,11 +247,16 @@ namespace AdnTestingSystem.Services.Services
             }
 
             if (request.Status.HasValue)
-                query = query.Where(b => b.Status == request.Status);
+                query = query.Where(b => b.Status == request.Status); 
 
             if (request.IsAll && request.IsAppointment)
             {
                 query = query.Where(b => (int)b.Status >= 2);
+            }
+
+            if (request.IsAll && request.IsSampleReceipt)
+            {
+                query = query.Where(b => (int)b.Status >= 4 && b.IsSampleReceiptCreated == false);
             }
 
             if (!string.IsNullOrEmpty(request.SortBy) && request.SortBy.Equals("status", StringComparison.OrdinalIgnoreCase))
