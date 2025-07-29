@@ -66,7 +66,7 @@ namespace AdnTestingSystem.Api.Controllers
         /// Lấy danh sách các đơn đã đặt của người dùng.
         /// </summary>
         /// <returns>Danh sách đơn đặt dịch vụ</returns>
-        [HttpGet("get-list")]
+        [HttpGet("get-list-for-staff")]
         public async Task<IActionResult> GetUserBookings([FromQuery] BookingListRequest request)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
