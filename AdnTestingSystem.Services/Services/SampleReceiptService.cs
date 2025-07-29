@@ -7,6 +7,7 @@ using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 
 namespace AdnTestingSystem.Services.Services
@@ -16,12 +17,14 @@ namespace AdnTestingSystem.Services.Services
         private readonly IUnitOfWork _uow;
         private readonly AdnTestingDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IEmailSender _email;
 
-        public SampleReceiptService(IUnitOfWork uow, AdnTestingDbContext context, IHttpContextAccessor httpContextAccessor)
+        public SampleReceiptService(IUnitOfWork uow, AdnTestingDbContext context, IHttpContextAccessor httpContextAccessor, IEmailSender email)
         {
             _uow = uow;
             _context = context;
             _httpContextAccessor = httpContextAccessor;
+            _email = email;
         }
 
         public async Task SaveSampleReceiptAsync(SaveSampleReceiptRequest request, int currentUserId)
@@ -63,7 +66,8 @@ namespace AdnTestingSystem.Services.Services
             }
 
             _context.SampleReceipts.Add(sampleReceipt);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
+            await SendSampleReceiptNotificationEmailAsync(request.CustomerFullName);
         }
 
         public async Task<CommonResponse<PagedResult<SampleReceiptListResponse>>> GetSampleReceiptsAsync(SampleReceiptListRequest request)
@@ -164,5 +168,25 @@ namespace AdnTestingSystem.Services.Services
             await _context.SaveChangesAsync();
         }
 
+        private async Task SendSampleReceiptNotificationEmailAsync(string customerFullName)
+        {
+            var user = await _context.Users
+                .Include(u => u.Profile)
+                .FirstOrDefaultAsync(u => u.Profile != null && u.Profile.FullName == customerFullName);
+
+            if (user == null || string.IsNullOrWhiteSpace(user.Email))
+            {
+                return;
+            }
+
+            var emailBody = new StringBuilder();
+            emailBody.AppendLine("<p>Kính chào quý khách,</p>");
+            emailBody.AppendLine("<p>MATAP xin thông báo chúng tôi đã nhận được mẫu xét nghiệm bạn gửi.</p>");
+            emailBody.AppendLine("<p>Vui lòng vào phần mềm tại mục <strong>Xác nhận mẫu đã gửi</strong> để tiến hành xác nhận thông tin!</p>");
+            emailBody.AppendLine("<p>Trân trọng,<br/>Admin</p>");
+
+            await _email.SendAsync(user.Email, "Thông báo nhận mẫu xét nghiệm", emailBody.ToString());
+
+        }
     }
 }
