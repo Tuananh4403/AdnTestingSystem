@@ -70,6 +70,11 @@ namespace AdnTestingSystem.Services.Services
         {
             var query = _uow.SampleReceipts.Query()
                 .Include(r => r.SampleDetails)
+                .Include(r => r.Booking)
+                    .ThenInclude(b => b.Customer)       
+                        .ThenInclude(c => c.Profile)
+                .Include(r => r.Booking)            
+                    .ThenInclude(b => b.DnaTestService)
                 .Where(r => r.DeletedAt == null);
 
             if (request.SampleReceiptId.HasValue)
@@ -101,6 +106,8 @@ namespace AdnTestingSystem.Services.Services
                 CustomerId = r.CustomerId,
                 CustomerFullName = r.CustomerFullName,
                 Status = (int)r.Status,
+                CreatedAt = r.CreatedAt,
+
                 Details = r.SampleDetails.Select(d => new SampleReceiptDetailResponse
                 {
                     Id = d.Id,
@@ -109,7 +116,29 @@ namespace AdnTestingSystem.Services.Services
                     Status = d.Status,
                     Collector = d.Collector,
                     CollectionTime = d.CollectionTime
-                }).ToList()
+                }).ToList(),
+
+                Booking = r.Booking == null ? null : new BookingResponse
+                {
+                    Id = r.Booking.Id,
+                    BookingDate = r.Booking.BookingDate,
+                    CustomerId = r.Booking.CustomerId,
+                    DnaTestServiceId = r.Booking.DnaTestServiceId,
+                    DnaTestServiceName = r.Booking.DnaTestService?.Name ?? "",
+                    SampleMethod = (int)r.Booking.SampleMethod,
+                    Status = (int)r.Booking.Status,
+                    IsCivil = r.Booking.IsCivil,
+                    AppointmentTime = r.Booking.AppointmentTime
+                },
+
+                Customer = r.Booking?.Customer == null ? null : new CustomerResponse
+                {
+                    Id = r.Booking.Customer.Id,
+                    Email = r.Booking.Customer.Email,
+                    FullName = r.Booking.Customer.Profile?.FullName ?? "",
+                    Phone = r.Booking.Customer.Profile?.Phone ?? "",
+                    Address = r.Booking.Customer.Profile?.Address ?? ""
+                }
             }).ToList();
 
             return CommonResponse<PagedResult<SampleReceiptListResponse>>.Ok(new PagedResult<SampleReceiptListResponse>
