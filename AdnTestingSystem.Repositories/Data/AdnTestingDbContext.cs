@@ -19,7 +19,8 @@ namespace AdnTestingSystem.Repositories.Data
         public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<Blog> Blogs => Set<Blog>();
         public DbSet<BookingAttachment> BookingAttachments => Set<BookingAttachment>();
-
+        public DbSet<SampleReceipt> SampleReceipts { get; set; }
+        public DbSet<SampleReceiptDetail> SampleReceiptDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -84,7 +85,13 @@ namespace AdnTestingSystem.Repositories.Data
                 .HasOne(ba => ba.Staff)
                 .WithMany()
                 .HasForeignKey(ba => ba.UploadedBy)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SampleReceipt>()
+                .HasMany(r => r.SampleDetails)
+                .WithOne(d => d.SampleReceipt)
+                .HasForeignKey(d => d.SampleReceiptId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

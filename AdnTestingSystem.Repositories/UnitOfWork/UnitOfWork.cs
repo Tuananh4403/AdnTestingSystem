@@ -19,6 +19,8 @@ namespace AdnTestingSystem.Repositories.UnitOfWork
         public IGenericRepository<TestResult> TestResults { get; }
         public IGenericRepository<Transaction> Transactions { get; }
         public IGenericRepository<UserProfile> UserProfiles { get; }
+        public IGenericRepository<SampleReceipt> SampleReceipts { get; }
+        public IGenericRepository<SampleReceiptDetail> SampleReceiptDetails { get; }
 
         public UnitOfWork(AdnTestingDbContext context)
         {
@@ -34,6 +36,8 @@ namespace AdnTestingSystem.Repositories.UnitOfWork
             TestResults = new GenericRepository<TestResult>(_context);
             Transactions = new GenericRepository<Transaction>(_context);
             UserProfiles = new GenericRepository<UserProfile>(_context);
+            SampleReceipts = new GenericRepository<SampleReceipt>(_context);
+            SampleReceiptDetails = new GenericRepository<SampleReceiptDetail>(_context);
         }
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
