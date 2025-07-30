@@ -22,6 +22,7 @@ namespace AdnTestingSystem.Repositories.UnitOfWork
         IGenericRepository<UserProfile> UserProfiles { get; }
         IGenericRepository<SampleReceipt> SampleReceipts { get; }
         IGenericRepository<SampleReceiptDetail> SampleReceiptDetails { get; }
+        IGenericRepository<TestResultDetail> TestResultDetails { get; }
 
         Task<int> CompleteAsync();
     }

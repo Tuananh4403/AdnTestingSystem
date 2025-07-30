@@ -19,6 +19,9 @@ namespace AdnTestingSystem.Repositories.Models
         public string Status { get; set; } = string.Empty;
 
         public string Collector { get; set; } = string.Empty;
+        public string Owner { get; set; } = string.Empty;
+        public string Relationship { get; set; } = string.Empty;
+        public string SampleCode { get; set; } = string.Empty;
         public DateTime CollectionTime { get; set; }
     }
 

@@ -55,6 +55,9 @@ namespace AdnTestingSystem.Services.Services
                     Quantity = sample.Quantity,
                     Status = sample.Status,
                     Collector = sample.Collector,
+                    Owner = sample.Owner,
+                    Relationship = sample.Relationship,
+                    SampleCode = sample.SampleCode,
                     CollectionTime = sample.CollectionTime,
                     CreatedAt = now,
                     CreatedBy = currentUserId,
@@ -127,6 +130,9 @@ namespace AdnTestingSystem.Services.Services
                     Quantity = d.Quantity,
                     Status = d.Status,
                     Collector = d.Collector,
+                    Owner = d.Owner,
+                    SampleCode = d.SampleCode,
+                    Relationship = d.Relationship,
                     CollectionTime = d.CollectionTime
                 }).ToList(),
 

@@ -12,6 +12,9 @@ namespace AdnTestingSystem.Services.Requests
         public int Quantity { get; set; }
         public string Status { get; set; }
         public string Collector { get; set; }
+        public string Owner { get; set; }
+        public string Relationship { get; set; }
+        public string SampleCode { get; set; }
         public DateTime CollectionTime { get; set; }
     }
 }

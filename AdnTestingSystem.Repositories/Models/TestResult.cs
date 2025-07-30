@@ -9,6 +9,11 @@ namespace AdnTestingSystem.Repositories.Models
 {
     public class TestResult : BaseModel
     {
+        public enum TestResultStatus
+        {
+            Pending = 0,
+            Approved = 1
+        }
         public int Id { get; set; }
 
         public int BookingId { get; set; }
@@ -21,7 +26,7 @@ namespace AdnTestingSystem.Repositories.Models
 
         public int CreatedById { get; set; }
         public User CreatedBy { get; set; } = null!;
-
+        public TestResultStatus Status { get; set; } = TestResultStatus.Pending;
         public ICollection<TestResultDetail> LocusResults { get; set; } = new List<TestResultDetail>();
     }
 
