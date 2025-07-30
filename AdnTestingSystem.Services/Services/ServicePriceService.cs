@@ -38,24 +38,36 @@ namespace AdnTestingSystem.Services.Services
         public async Task<CommonResponse<PagedResult<DnaTestServiceResponse>>> GetServicesAsync(int page, int pageSize)
         {
             var query = _uow.DnaTestServices
-            .Query()
-            .Where(x => x.IsActive)
-            .OrderByDescending(x => x.CreatedAt);
+                .Query()
+                .Where(x => x.IsActive)
+                .OrderByDescending(x => x.CreatedAt);
 
             var paged = await PaginationHelper.ToPagedResultAsync(query, page, pageSize);
 
-            var creatorIds = paged.Items.Select(x => x.CreatedBy).Distinct().ToList();
-            var creators = await _uow.Users
-            .Query()
-            .Include(u => u.Profile)
-            .Where(u => creatorIds.Contains(u.Id))
-            .ToListAsync();
+            var serviceIds = paged.Items.Select(x => x.Id).ToList();
 
-            var creatorDict = creators.ToDictionary(
-                u => u.Id,
-                u => u.Profile?.FullName ?? "Không rõ"
-            );
+            // Lấy toàn bộ bookings theo service id
+            var bookings = await _uow.Bookings
+                .Query()
+                .Where(b => serviceIds.Contains(b.DnaTestServiceId))
+                .Include(b => b.Rating)
+                .Include(b => b.Customer)
+                    .ThenInclude(u => u.Profile)
+                .ToListAsync();
 
+            var ratingsByService = bookings
+                .Where(b => b.Rating != null)
+                .GroupBy(b => b.DnaTestServiceId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(b => new ServiceRatingDto
+                    {
+                        FullName = b.Customer.Profile?.FullName ?? "Ẩn danh",
+                        Stars = b.Rating!.Stars,
+                        Comment = b.Rating.Comment,
+                        CreatedAt = b.Rating.CreatedAt
+                    }).ToList()
+                );
 
             var mappedItems = paged.Items.Select(service => new DnaTestServiceResponse
             {
@@ -64,7 +76,9 @@ namespace AdnTestingSystem.Services.Services
                 Description = service.Description,
                 IsActive = service.IsActive,
                 CreatedAt = service.CreatedAt,
-
+                Ratings = ratingsByService.ContainsKey(service.Id)
+                    ? ratingsByService[service.Id]
+                    : new List<ServiceRatingDto>()
             }).ToList();
 
             var result = new PagedResult<DnaTestServiceResponse>

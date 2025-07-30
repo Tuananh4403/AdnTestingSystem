@@ -37,6 +37,7 @@ namespace AdnTestingSystem.Services.Services
             {
                 booking.Rating.Stars = request.Stars;
                 booking.Rating.Comment = request.Comment;
+                booking.Rating.CreatedBy = request.UserId;
                 booking.Rating.CreatedAt = DateTime.UtcNow;
             }
             else
@@ -46,6 +47,7 @@ namespace AdnTestingSystem.Services.Services
                     BookingId = request.BookingId,
                     Stars = request.Stars,
                     Comment = request.Comment,
+                    CreatedBy = request.UserId,
                     CreatedAt = DateTime.UtcNow
                 };
 

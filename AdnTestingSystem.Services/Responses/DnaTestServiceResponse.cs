@@ -14,5 +14,6 @@ namespace AdnTestingSystem.Services.Responses
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public string CreatedAtString => CreatedAt.ToString("dd-MM-yyyy");
+        public List<ServiceRatingDto> Ratings { get; set; } = new();
     }
 }
