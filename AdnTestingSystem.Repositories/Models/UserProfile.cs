@@ -19,6 +19,8 @@ namespace AdnTestingSystem.Repositories.Models
         public string Gender { get; set; } = "";
         public string Position { get; set; } = "";
         public User User { get; set; } = null!;
+        public string? AvatarPath { get; set; }
+
     }
 
 }

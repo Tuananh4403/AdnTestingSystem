@@ -30,24 +30,31 @@ namespace AdnTestingSystem.Services.Services
             if (booking == null)
                 return CommonResponse<string>.Fail("Booking not found or you are not authorized.");
 
-            if (booking.Rating != null)
-                return CommonResponse<string>.Fail("You have already rated this booking.");
-
             if (request.Stars < 1 || request.Stars > 5)
                 return CommonResponse<string>.Fail("Rating stars must be from 1 to 5.");
 
-            var rating = new Rating
+            if (booking.Rating != null)
             {
-                BookingId = request.BookingId,
-                Stars = request.Stars,
-                Comment = request.Comment,
-                CreatedAt = DateTime.UtcNow
-            };
+                booking.Rating.Stars = request.Stars;
+                booking.Rating.Comment = request.Comment;
+                booking.Rating.CreatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                var rating = new Rating
+                {
+                    BookingId = request.BookingId,
+                    Stars = request.Stars,
+                    Comment = request.Comment,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            _context.Ratings.Add(rating);
+                _context.Ratings.Add(rating);
+            }
+
             await _context.SaveChangesAsync();
 
-            return CommonResponse<string>.Ok("OK", "Rating created successfully.");
+            return CommonResponse<string>.Ok("OK", "Rating saved successfully.");
         }
 
         public async Task<CommonResponse<RatingViewModel>> GetRatingByBookingIdAsync(int bookingId)
