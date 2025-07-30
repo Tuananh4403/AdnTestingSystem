@@ -41,5 +41,11 @@ namespace AdnTestingSystem.Api.Controllers
             return Ok(new { message = "Status updated successfully" });
         }
 
+        [HttpGet("sample-types")]
+        public async Task<IActionResult> GetSampleTypes([FromQuery] int bookingId)
+        {
+            var result = await _service.GetSampleTypesByBookingIdAsync(bookingId);
+            return Ok(result);
+        }
     }
 }

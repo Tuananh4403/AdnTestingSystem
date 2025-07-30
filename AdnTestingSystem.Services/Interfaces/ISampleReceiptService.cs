@@ -13,6 +13,8 @@ namespace AdnTestingSystem.Services.Interfaces
         Task SaveSampleReceiptAsync(SaveSampleReceiptRequest request, int currentUserId);
         Task<CommonResponse<PagedResult<SampleReceiptListResponse>>> GetSampleReceiptsAsync(SampleReceiptListRequest request);
         Task UpdateSampleReceiptStatusAsync(UpdateSampleReceiptStatusRequest request);
+        Task<List<SampleTypeResponse>> GetSampleTypesByBookingIdAsync(int bookingId);
+
 
     }
 }

@@ -18,6 +18,8 @@ namespace AdnTestingSystem.Services.Requests
         public bool IsAppointment { get; set; } = false;
         public int? BookingId { get; set; }
         public bool IsSampleReceipt { get; set; } = false;
+        public bool IsTestResult { get; set; } = false;
+
 
 
     }

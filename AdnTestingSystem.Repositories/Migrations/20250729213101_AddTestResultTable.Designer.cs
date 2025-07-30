@@ -4,6 +4,7 @@ using AdnTestingSystem.Repositories.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AdnTestingSystem.Repositories.Migrations
 {
     [DbContext(typeof(AdnTestingDbContext))]
-    partial class AdnTestingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250729213101_AddTestResultTable")]
+    partial class AddTestResultTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,9 +108,6 @@ namespace AdnTestingSystem.Repositories.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsSampleReceiptCreated")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsTestResultCreated")
                         .HasColumnType("bit");
 
                     b.Property<string>("Note")
@@ -868,7 +868,7 @@ namespace AdnTestingSystem.Repositories.Migrations
                     b.HasOne("AdnTestingSystem.Repositories.Models.TestResult", "TestResult")
                         .WithMany("LocusResults")
                         .HasForeignKey("TestResultId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("TestResult");

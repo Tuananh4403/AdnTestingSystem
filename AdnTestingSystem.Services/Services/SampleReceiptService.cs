@@ -196,5 +196,23 @@ namespace AdnTestingSystem.Services.Services
             await _email.SendAsync(user.Email, "Thông báo nhận mẫu xét nghiệm", emailBody.ToString());
 
         }
+
+        public async Task<List<SampleTypeResponse>> GetSampleTypesByBookingIdAsync(int bookingId)
+        {
+            var receipt = await _context.SampleReceipts
+                .Include(r => r.SampleDetails)
+                .FirstOrDefaultAsync(r => r.BookingId == bookingId && r.DeletedAt == null);
+
+            if (receipt == null)
+                throw new Exception("SampleReceipt not found");
+
+            return receipt.SampleDetails
+                .Select(d => new SampleTypeResponse
+                {
+                    SampleType = d.SampleType
+                })
+                .ToList();
+        }
+
     }
 }

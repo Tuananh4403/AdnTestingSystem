@@ -92,6 +92,12 @@ namespace AdnTestingSystem.Repositories.Data
                 .WithOne(d => d.SampleReceipt)
                 .HasForeignKey(d => d.SampleReceiptId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TestResult>()
+               .HasMany(r => r.LocusResults)
+               .WithOne(d => d.TestResult)
+               .HasForeignKey(d => d.TestResultId)
+               .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

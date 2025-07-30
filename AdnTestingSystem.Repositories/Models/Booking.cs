@@ -37,6 +37,7 @@ namespace AdnTestingSystem.Repositories.Models
         public Rating? Rating { get; set; }
         public Transaction? Transaction { get; set; }
         public bool IsSampleReceiptCreated { get; set; } = false;
+        public bool IsTestResultCreated { get; set; } = false;
         public ICollection<BookingAttachment> BookingAttachments { get; set; } = new List<BookingAttachment>();
 
     }
