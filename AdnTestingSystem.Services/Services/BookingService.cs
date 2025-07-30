@@ -261,7 +261,11 @@ namespace AdnTestingSystem.Services.Services
 
             if (request.IsAll && request.IsTestResult)
             {
-                query = query.Where(b => (int)b.Status >= 5 && b.IsTestResultCreated == false && b.IsSampleReceiptCreated == true);
+                query = query.Where(b =>
+                    (int)b.Status >= 5 &&
+                    b.IsTestResultCreated == false &&
+                    b.IsSampleReceiptCreated == true &&
+                    _context.SampleReceipts.Any(r => r.BookingId == b.Id && r.Status == SampleReceipt.SampleReceiptStatus.Confirmed));
             }
 
             if (!string.IsNullOrEmpty(request.SortBy) && request.SortBy.Equals("status", StringComparison.OrdinalIgnoreCase))

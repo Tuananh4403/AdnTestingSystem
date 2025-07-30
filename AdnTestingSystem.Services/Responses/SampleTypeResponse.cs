@@ -8,6 +8,7 @@ namespace AdnTestingSystem.Services.Responses
 {
     public class SampleTypeResponse
     {
-        public string SampleType { get; set; } = string.Empty;
+        public string SampleCode { get; set; } = string.Empty;
+
     }
 }

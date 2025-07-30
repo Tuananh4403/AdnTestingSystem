@@ -12,6 +12,6 @@ namespace AdnTestingSystem.Services.Interfaces
     {
         Task SaveTestResultAsync(SaveTestResultRequest request, int currentUserId);
         Task<CommonResponse<PagedResult<TestResultListResponse>>> GetTestResultsAsync(TestResultListRequest request);
-
+        Task UpdateTestResultStatusAsync(UpdateTestResultStatusRequest request, int userId);
     }
 }

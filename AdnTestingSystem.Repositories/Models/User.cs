@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AdnTestingSystem.Repositories.Models
 {
-    public enum UserRole { Guest, Customer, Staff, Manager, Admin }
+    public enum UserRole { Guest, Customer, Staff, Manager, Admin, StaffManager }
 
     public class User
     {

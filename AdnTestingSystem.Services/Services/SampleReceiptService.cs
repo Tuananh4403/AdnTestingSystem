@@ -215,7 +215,7 @@ namespace AdnTestingSystem.Services.Services
             return receipt.SampleDetails
                 .Select(d => new SampleTypeResponse
                 {
-                    SampleType = d.SampleType
+                    SampleCode = d.SampleCode
                 })
                 .ToList();
         }

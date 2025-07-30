@@ -80,6 +80,11 @@ namespace AdnTestingSystem.Services.Services
         {
             var query = _uow.TestResults.Query()
                 .Include(tr => tr.LocusResults)
+                .Include(tr => tr.Booking)
+                    .ThenInclude(b => b.Customer)
+                        .ThenInclude(c => c.Profile)
+                .Include(tr => tr.Booking)
+                    .ThenInclude(b => b.Samples)
                 .Where(tr => tr.DeletedAt == null);
 
             if (request.TestResultId.HasValue)
@@ -95,6 +100,29 @@ namespace AdnTestingSystem.Services.Services
             query = query.OrderByDescending(tr => tr.UpdatedAt);
 
             var paged = await PaginationHelper.ToPagedResultAsync(query, request.Page, request.PageSize);
+            var bookingIds = paged.Items.Select(x => x.BookingId).ToList();
+
+            var confirmedReceipts = await _context.SampleReceipts
+                .Where(r => bookingIds.Contains(r.BookingId) && r.Status == SampleReceipt.SampleReceiptStatus.Confirmed)
+                .Include(r => r.SampleDetails)
+                .ToListAsync();
+
+            var sampleDetailDict = confirmedReceipts
+                .GroupBy(r => r.BookingId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.SelectMany(r => r.SampleDetails.Select(d => new SampleReceiptDetailResponse
+                    {
+                        SampleType = d.SampleType,
+                        Quantity = d.Quantity,
+                        Status = d.Status,
+                        Collector = d.Collector,
+                        Owner = d.Owner,
+                        Relationship = d.Relationship,
+                        SampleCode = d.SampleCode,
+                        CollectionTime = d.CollectionTime
+                    })).ToList()
+                );
 
             var items = paged.Items.Select(tr => new TestResultListResponse
             {
@@ -115,7 +143,19 @@ namespace AdnTestingSystem.Services.Services
                     Allele2_Person2 = d.Allele2_Person2,
                     PI = d.PI,
                     Note = d.Note
-                }).ToList()
+                }).ToList(),
+
+                CustomerInfo = tr.Booking?.Customer?.Profile != null ? new BookingCustomerInfo
+                {
+                    FullName = tr.Booking.Customer.Profile.FullName,
+                    Email = tr.Booking.Customer.Email,
+                    Phone = tr.Booking.Customer.Profile.Phone,
+                    Address = tr.Booking.Customer.Profile.Address
+                } : null,
+
+                SampleDetails = sampleDetailDict.ContainsKey(tr.BookingId)
+                    ? sampleDetailDict[tr.BookingId]
+                    : new List<SampleReceiptDetailResponse>()
             }).ToList();
 
             return CommonResponse<PagedResult<TestResultListResponse>>.Ok(new PagedResult<TestResultListResponse>
@@ -126,5 +166,52 @@ namespace AdnTestingSystem.Services.Services
                 PageSize = paged.PageSize
             });
         }
+        public async Task UpdateTestResultStatusAsync(UpdateTestResultStatusRequest request, int userId)
+        {
+            var testResult = await _uow.TestResults.GetByIdAsync(request.TestResultId);
+            if (testResult == null || testResult.DeletedAt != null)
+                throw new Exception("Test result not found");
+
+            testResult.Status = (TestResult.TestResultStatus)request.Status;
+            testResult.UpdatedAt = DateTime.UtcNow;
+            testResult.UpdatedBy = userId;
+
+            var booking = await _context.Bookings
+                .FirstOrDefaultAsync(b => b.Id == testResult.BookingId && b.DeletedAt == null);
+
+            if (booking != null)
+            {
+                booking.Status = BookingStatus.Completed; 
+                booking.UpdatedAt = DateTime.UtcNow;
+                booking.UpdatedBy = userId;
+            }
+
+            await _uow.CompleteAsync();
+
+            await SendTestResultNotificationEmailAsync(testResult.BookingId);
+        }
+
+        private async Task SendTestResultNotificationEmailAsync(int bookingId)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Customer)
+                    .ThenInclude(c => c.Profile)
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.DeletedAt == null);
+
+            if (booking?.Customer?.Email == null)
+                return;
+
+            var customerEmail = booking.Customer.Email;
+            var customerName = booking.Customer.Profile?.FullName ?? "quý khách";
+
+            var emailBody = new StringBuilder();
+            emailBody.AppendLine($"<p>Kính chào {customerName},</p>");
+            emailBody.AppendLine("<p>Kết quả xét nghiệm của bạn đã sẵn sàng.</p>");
+            emailBody.AppendLine("<p>Vui lòng truy cập phần mềm tại mục <strong>Kết quả xét nghiệm</strong> để xem chi tiết.</p>");
+            emailBody.AppendLine("<p>Trân trọng,<br/>MATAP</p>");
+
+            await _email.SendAsync(customerEmail, "Kết quả xét nghiệm đã có", emailBody.ToString());
+        }
+
     }
 }

@@ -32,6 +32,14 @@ namespace AdnTestingSystem.Api.Controllers
             var result = await _service.GetTestResultsAsync(request);
             return Ok(result);
         }
+        [HttpPost("update-status")]
+        public async Task<IActionResult> UpdateStatus([FromBody] UpdateTestResultStatusRequest request)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+            await _service.UpdateTestResultStatusAsync(request, userId);
+            return Ok(new { message = "Status updated successfully" });
+        }
 
     }
 }
