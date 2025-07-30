@@ -137,6 +137,12 @@ namespace AdnTestingSystem.Api.Controllers
             var result = await _service.GenerateVnPayPaymentUrlAsync(id, userId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
+        [HttpGet("booking-statistics")]
+        public async Task<IActionResult> GetBookingStatistics([FromQuery] int? month = null)
+        {
+            var result = await _service.GetBookingStatisticsAsync(month);
+            return Ok(result);
+        }
 
     }
 }

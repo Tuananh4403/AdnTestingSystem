@@ -1,13 +1,11 @@
-﻿using AdnTestingSystem.Repositories.UnitOfWork;
+﻿using AdnTestingSystem.Repositories.Models;
+using AdnTestingSystem.Repositories.UnitOfWork;
 using AdnTestingSystem.Services.Helpers;
 using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace AdnTestingSystem.Services.Services
 {
@@ -55,5 +53,26 @@ namespace AdnTestingSystem.Services.Services
                 TotalItems = paged.TotalItems
             });
         }
+        public async Task<CommonResponse<List<MonthlyRevenueDto>>> GetMonthlyRevenueAsync()
+        {
+            var paidTransactions = await _uow.Transactions.Query()
+                .Where(t => t.Status == PaymentStatus.Paid)
+                .ToListAsync();
+
+            var result = paidTransactions
+                .GroupBy(t => new { t.CreatedAt.Year, t.CreatedAt.Month })
+                .Select(g => new MonthlyRevenueDto
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    TotalAmount = g.Sum(t => t.Amount)
+                })
+                .OrderByDescending(x => x.Year)
+                .ThenByDescending(x => x.Month)
+                .ToList();
+
+            return CommonResponse<List<MonthlyRevenueDto>>.Ok(result);
+        }
+
     }
 }

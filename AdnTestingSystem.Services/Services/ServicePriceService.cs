@@ -164,5 +164,46 @@ namespace AdnTestingSystem.Services.Services
                 ? CommonResponse<decimal>.Ok(0, "Vui lòng liên hệ với chúng tôi để biết thêm thông tin thanh toán!")
                 : CommonResponse<decimal>.Ok(price.Price);
         }
+
+        public async Task<CommonResponse<List<ServiceRatingStatisticDto>>> GetRatingStatisticsAsync(int? month = null)
+        {
+            var targetMonth = month ?? DateTime.UtcNow.Month;
+            var targetYear = DateTime.UtcNow.Year;
+
+            var services = await _uow.DnaTestServices.Query().ToListAsync();
+
+            var bookings = await _uow.Bookings
+                .Query()
+                .Include(b => b.Rating)
+                .Where(b => b.CreatedAt.Month == targetMonth && b.CreatedAt.Year == targetYear)
+                .ToListAsync();
+
+            var result = new List<ServiceRatingStatisticDto>();
+
+            foreach (var service in services)
+            {
+                var serviceBookings = bookings.Where(b => b.DnaTestServiceId == service.Id).ToList();
+                var ratedBookings = serviceBookings.Where(b => b.Rating != null).ToList();
+
+                int totalRatings = ratedBookings.Count;
+                int totalStars = ratedBookings.Sum(r => r.Rating!.Stars);
+                int totalBookings = serviceBookings.Count;
+
+                double averageStars = totalRatings > 0 ? Math.Round((double)totalStars / totalRatings, 2) : 0;
+                double ratingPercentage = totalBookings > 0 ? Math.Round((double)totalRatings * 100 / totalBookings, 2) : 0;
+
+                result.Add(new ServiceRatingStatisticDto
+                {
+                    ServiceId = service.Id,
+                    ServiceName = service.Name,
+                    TotalRatings = totalRatings,
+                    TotalStars = totalStars,
+                    AverageStars = averageStars,
+                    RatingPercentage = ratingPercentage
+                });
+            }
+
+            return CommonResponse<List<ServiceRatingStatisticDto>>.Ok(result);
+        }
     }
 }

@@ -32,5 +32,16 @@ namespace AdnTestingSystem.Api.Controllers
             var result = await _transactionService.GetUserTransactionsAsync(userId, request);
             return Ok(result);
         }
+        /// <summary>
+        /// Thống kê tổng tiền thu được mỗi tháng từ các giao dịch đã thanh toán.
+        /// </summary>
+        [HttpGet("monthly-revenue")]
+        [Authorize(Roles = "Admin")] // Chỉ admin được phép xem
+        public async Task<IActionResult> GetMonthlyRevenue()
+        {
+            var result = await _transactionService.GetMonthlyRevenueAsync();
+            return Ok(result);
+        }
+
     }
 }

@@ -485,5 +485,49 @@ namespace AdnTestingSystem.Services.Services
             await _uow.CompleteAsync();
             return CommonResponse<string>.Ok(string.Empty, "Thanh toán thành công! Vui lòng kiểm tra Lịch sử giao dịch để biết thêm thông tin chi tiết.");
         }
+
+        public async Task<CommonResponse<BookingStatusStatisticDto>> GetBookingStatisticsAsync(int? month = null)
+        {
+            var targetMonth = month ?? DateTime.UtcNow.Month;
+            var targetYear = DateTime.UtcNow.Year;
+
+            var bookings = await _uow.Bookings.Query()
+                .Where(b => b.BookingDate.Month == targetMonth && b.BookingDate.Year == targetYear)
+                .ToListAsync();
+
+            int total = bookings.Count;
+            if (total == 0)
+            {
+                return CommonResponse<BookingStatusStatisticDto>.Ok(new BookingStatusStatisticDto
+                {
+                    TotalBookings = 0,
+                    CompletedCount = 0,
+                    CancelledCount = 0,
+                    ProcessingCount = 0,
+                    CompletedPercentage = 0,
+                    CancelledPercentage = 0,
+                    ProcessingPercentage = 0
+                }, $"Không có booking nào trong tháng {targetMonth}.");
+            }
+
+            int completed = bookings.Count(b => b.Status == BookingStatus.Completed);
+            int cancelled = bookings.Count(b => b.Status == BookingStatus.Cancelled);
+            int processing = total - completed - cancelled;
+
+            var result = new BookingStatusStatisticDto
+            {
+                TotalBookings = total,
+                CompletedCount = completed,
+                CompletedPercentage = Math.Round((double)completed * 100 / total, 2),
+
+                CancelledCount = cancelled,
+                CancelledPercentage = Math.Round((double)cancelled * 100 / total, 2),
+
+                ProcessingCount = processing,
+                ProcessingPercentage = Math.Round((double)processing * 100 / total, 2)
+            };
+
+            return CommonResponse<BookingStatusStatisticDto>.Ok(result);
+        }
     }
 }

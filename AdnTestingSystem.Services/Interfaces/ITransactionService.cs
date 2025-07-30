@@ -11,5 +11,7 @@ namespace AdnTestingSystem.Services.Interfaces
     public interface ITransactionService
     {
         Task<CommonResponse<PagedResult<TransactionResponse>>> GetUserTransactionsAsync(int userId, TransactionListRequest request);
+        Task<CommonResponse<List<MonthlyRevenueDto>>> GetMonthlyRevenueAsync();
+
     }
 }

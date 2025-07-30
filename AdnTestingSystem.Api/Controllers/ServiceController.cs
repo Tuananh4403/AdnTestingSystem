@@ -87,6 +87,12 @@ namespace AdnTestingSystem.Api.Controllers
         {
             return Ok(await _service.GetServicePriceAdvancedAsync(id, resultTimeType, sampleMethod, isCivil));
         }
+        [HttpGet("rating-statistics")]
+        public async Task<IActionResult> GetRatingStatistics([FromQuery] int? month = null)
+        {
+            var result = await _service.GetRatingStatisticsAsync(month);
+            return Ok(result);
+        }
 
     }
 }
