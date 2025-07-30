@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.FileProviders;
+using AdnTestingSystem.Services.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AdnTestingDbContext>(options =>
@@ -114,7 +115,6 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
-
 app.MapControllers();
 
 app.Run();

@@ -76,6 +76,7 @@ namespace AdnTestingSystem.Api.Controllers
                         UserRole.Staff => "Nhân viên",
                         UserRole.Manager => "Quản lí",
                         UserRole.Admin => "Quản trị viên",
+                        UserRole.StaffManager =>"Trường phòng kiểm định",
                         _ => "Không xác định"
                     }
                 });

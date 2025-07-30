@@ -5,6 +5,7 @@ using AdnTestingSystem.Services.Interfaces;
 using AdnTestingSystem.Services.Requests;
 using AdnTestingSystem.Services.Responses;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -18,11 +19,12 @@ namespace AdnTestingSystem.Api.Controllers
     {
         private readonly IUnitOfWork _uow;
         private readonly IUserManagementService _userService;
-
-        public UserController(IUnitOfWork uow, IUserManagementService userService)
+        private readonly IEmailSender _emailSender;
+        public UserController(IUnitOfWork uow, IUserManagementService userService, IEmailSender emailSender)
         {
-            _uow = uow;
+            _uow = uow; 
             _userService = userService;
+            _emailSender = emailSender;
         }
 
         /// <summary>
@@ -138,7 +140,57 @@ namespace AdnTestingSystem.Api.Controllers
 
             return Ok(CommonResponse<string>.Ok("Cập nhật thành công"));
         }
+        [HttpPost("send-temp-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SendTemporaryPassword([FromBody] SendTempPasswordRequest request)
+        {
+            var user = await _uow.Users.GetAsync(u => u.Email == request.Email);
+            if (user == null)
+                return NotFound(CommonResponse<string>.Fail("Email chưa được đăng ký tài khoản."));
 
-        
+            var tempPassword = PasswordHelper.GenerateRandomPassword(10);
+            var tempPasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword);
+
+            var subject = "Mật khẩu mới";
+            var content = $"Mật khẩu mới của bạn là: <b>{tempPassword}</b><br/>" +
+                          $"Mật khẩu này sẽ hết hạn sau 10 phút. Vui lòng sử dụng ngay.";
+            await _emailSender.SendAsync(user.Email, subject, content);
+
+            user.TemporaryPasswordHash = tempPasswordHash;
+            user.TemporaryPasswordExpiresAt = DateTime.UtcNow.AddMinutes(10);
+
+            _uow.Users.Update(user);
+            await _uow.CompleteAsync();
+
+            return Ok(CommonResponse<string>.Ok("Mật khẩu mới đã được gửi tới email của bạn."));
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] PasswordResetRequest request)
+        {
+            var user = await _uow.Users.GetAsync(u => u.Email == request.Email);
+            if (user == null)
+                return NotFound(CommonResponse<string>.Fail("Email không tồn tại."));
+
+            if (user.TemporaryPasswordHash == null || user.TemporaryPasswordExpiresAt < DateTime.UtcNow)
+                return BadRequest(CommonResponse<string>.Fail("Mật khẩu tạm thời đã hết hạn hoặc không hợp lệ."));
+
+            if (!BCrypt.Net.BCrypt.Verify(request.TempPassword, user.TemporaryPasswordHash))
+                return BadRequest(CommonResponse<string>.Fail("Mật khẩu tạm thời không đúng."));
+
+            if (!PasswordHelper.ValidatePasswordStrength(request.NewPassword))
+                return BadRequest(CommonResponse<string>.Fail("Mật khẩu mới phải có ít nhất 8 kí tự, bao gồm chữ hoa, chữ thường và ký tự đặc biệt."));
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.TemporaryPasswordHash = null;
+            user.TemporaryPasswordExpiresAt = null;
+
+            _uow.Users.Update(user);
+            await _uow.CompleteAsync();
+
+            return Ok(CommonResponse<string>.Ok("Đổi mật khẩu thành công."));
+        }
+
     }
 }

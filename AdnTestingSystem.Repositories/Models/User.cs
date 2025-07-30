@@ -22,6 +22,9 @@ namespace AdnTestingSystem.Repositories.Models
         public DateTime? RefreshTokenExpiryTime { get; set; }
 
         public UserProfile? Profile { get; set; }
+        public string? TemporaryPasswordHash { get; set; }
+        public DateTime? TemporaryPasswordExpiresAt { get; set; }
+
     }
 
 }
